@@ -1,0 +1,168 @@
+@import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css");
+@import url("https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300..900;1,300..900&display=swap");
+
+:root {
+    --primary: #14b8a6;
+    --secondary: #2dd4bf;
+    --gray: #d5d5d5;
+    --white: #ffffff;
+    --black: #000000;
+}
+
+.background-primary {
+    background-color: var(--primary);
+}
+
+.background-secondary {
+    background-color: var(--secondary);
+}
+
+.background-third {
+    background-color: #e6fefb;
+}
+
+.background-gradient {
+    background: linear-gradient(to bottom, #2dd4bf, #14b8a6);
+}
+
+.color-primary {
+    color: #14b8a6;
+}
+
+.font-32 {
+    font-size: 32px;
+}
+
+.font-20 {
+    font-size: 20px;
+}
+
+.font-14 {
+    font-size: 14px;
+}
+
+.font-10 {
+    font-size: 10px;
+}
+
+.font-primary {
+    color: var(--primary);
+}
+
+.font-black {
+    color: var(--black);
+}
+
+body {
+    font-family: "Figtree", sans-serif !important;
+}
+
+/* AUTHENTICATION */
+.navbar-auth {
+    height: 92px;
+    border-radius: 0 0 20px 20px;
+}
+
+form button {
+    border: 2px;
+}
+
+form .button-register {
+    border-color: var(--primary);
+    background-color: var(--white);
+    color: var(--primary);
+    padding-top: 8px;
+    padding-bottom: 8px;
+    border-radius: 10px !important;
+}
+
+form .button-login {
+    border-color: var(--primary);
+    background-color: var(--primary);
+    color: var(--white);
+    padding-top: 8px;
+    padding-bottom: 8px;
+    border-radius: 10px !important;
+}
+
+/* HERO SECTION */
+.hero-main {
+    height: 100px;
+    display: flex;
+    border-radius: 0 0 50px 50px;
+}
+
+/* MAIN CONTENT */
+.main {
+    max-width: 350px;
+    padding-top: 10px;
+}
+
+/* MEMBER CARD SECTION */
+.card-nama {
+    margin-bottom: 40px;
+}
+
+/* FILTER SECTION */
+.filter {
+    padding: 10px 20px;
+    background-color: var(--white);
+    border-radius: 10px;
+    border: 1px solid;
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.filter-active {
+    background-color: var(--primary) !important;
+    color: var(--white);
+}
+
+/* CARDS SECTION */
+
+.card-items {
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+    transition: 0.3s;
+    width: 170px;
+    border-radius: 5px;
+    margin: 5px 0;
+}
+
+.card-items img {
+    border-radius: 5px 5px 0 0;
+}
+
+.card-items .card-container {
+    padding: 5px 8px;
+    text-align: left;
+}
+
+/* REWARD DETAIL */
+.reward-detail .poin-detail {
+    width: 90px;
+    border: 1px solid;
+    border-color: var(--secondary);
+}
+
+.reward-detail .button-tukar {
+    height: 40px;
+    background-image: linear-gradient(var(--secondary), var(--primary));
+    border-radius: 10px;
+}
+
+/* HISTORY PAGE */
+.history {
+    padding-top: 20px;
+}
+
+.history ul {
+    padding-left: 0;
+}
+
+.history ul li {
+    list-style: none;
+}
+
+.history ul li .data-history {
+    border: 1px solid var(--gray);
+}
