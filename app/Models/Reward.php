@@ -9,7 +9,14 @@ class Reward extends Model
 {
     use HasFactory;
 
-    public function scopeFilter($query, array $filters){
+    protected $fillable = [
+        'title',
+        'description',
+        'product_points'
+    ];
 
+    public function users()
+    {
+        return $this->belongsToMany(User::class)->withPivot('redeemed_at');
     }
 }

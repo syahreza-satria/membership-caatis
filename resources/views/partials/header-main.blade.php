@@ -16,6 +16,11 @@
                 </li>
                 <li>
                     <button class="dropdown-item" type="button">
+                        <a href="/order" class="text-decoration-none font-black">Pembelian</a>
+                    </button>
+                </li>
+                <li>
+                    <button class="dropdown-item" type="button">
                         <a href="/history" class="text-decoration-none font-black">Riwayat</a>
                     </button>
                 </li>
@@ -40,6 +45,6 @@
 
 {{-- Hero Start --}}
 <section class="background-gradient justify-content-center text-center align-items-center hero-main">
-    <h1 class="fw-bold text-white font-32 ">My Rewards</h1>
+    <h1 class="fw-bold text-white font-32 ">{{ $banner }}</h1>
 </section>
 {{-- Hero End --}}

@@ -3,7 +3,9 @@
 use App\Models\Reward;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\RewardController;
+use App\Http\Controllers\HistoryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -23,7 +25,7 @@ Route::get('/', [RewardController::class, 'index'])->middleware('auth');
 Route::get('/rewards/{reward}', [RewardController::class, 'show'])->middleware('auth');
 
 // Tukar Poin
-Route::post('/rewards/{reward}/redeem', [RewardController::class, 'tukarPoin'])->middleware('auth');
+Route::post('/rewards/redeem/{reward}', [RewardController::class, 'redeemPoints'])->middleware('auth');
 
 // Show Register
 Route::get('/register', [UserController::class, 'create'])->middleware('guest');
@@ -40,13 +42,19 @@ Route::get('/login', [UserController::class, 'login'])->name('login')->middlewar
 // Log In User
 Route::post('/users/authenticate', [UserController::class, 'authenticate']);
 
+// History Controller
+Route::get('/history', [HistoryController::class, 'index'])->middleware('auth');
+
+Route::get('/order', [OrderController::class, 'index'])->middleware('auth');
+
+Route::get('/order/menu', [OrderController::class, 'pembelian'])->name('order.menu')->middleware('auth');
+
 Route::get('/about', function(){
-    return view('about');
+    return view('about',[
+        'banner' => 'TENTANG KAMI'
+    ]);
 })->middleware('auth');
 
-Route::get('/history', function(){
-    return view('history');
-})->middleware('auth');
 
 Route::get('/dashboards', function(){
     return view('dashboards.dashboard');

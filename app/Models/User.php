@@ -11,6 +11,27 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
+    public function rewards(){
+        return $this->belongsToMany(Reward::class)->withPivot('redeemed_at');
+    }
+
+    public function addPoints($points)
+    {
+        $this->user_points += $points;
+        $this->save();
+    }
+
+    public function redeemReward(Reward $reward)
+    {
+        if($this->user_points >= $reward->product_points){
+            $this->user_points = $this->user_points - $reward->product_points;
+            $this->save();
+            return true;
+        } else{
+            return false;
+        }
+    }
+
     /**
      * The attributes that are mass assignable.
      *

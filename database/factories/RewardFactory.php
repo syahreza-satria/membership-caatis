@@ -15,10 +15,8 @@ class RewardFactory extends Factory
     {
         return [
             'title' => $this->faker->sentence(),
-            'tags' => 'Minuman, Makanan',
             'product_points' => $this->faker->numberBetween(10,100),
             'description' => $this->faker->paragraph(3),
-            'location' => $this->faker->city(),
         ];
     }
 }

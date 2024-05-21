@@ -9,9 +9,45 @@
         </div>
         <p class="font-14 w-100 ">{{ $reward->description }}</p>
 
-        <form action="/rewards/{reward}/redeem" method="POST">
+        <form action="/rewards/redeem/{{ $reward->id}}" method="POST">
             @csrf
-            <button type="submit" class="w-100 button-tukar mt-5 mb-3 border-0 text-light fw-bold ">Tukarkan Poin</button>
+            <button id="tukar-point" type="submit" class="w-100 button-tukar mt-5 mb-3 border-0 text-light fw-bold ">Tukarkan Poin</button>
         </form>
     </section>
+
+    @if (@session('error'))
+        <script>
+            Swal.fire({
+                title: 'Error!',
+                text: '{{ session('error') }}', 
+                icon: 'error',
+                iconColor: '#FF444E',
+                showConfirmButton: false,
+                timer: 3000
+            });
+        </script>
+    @endif
+
+    <script>
+        
+
+        document.getElementById('tukar-point').addEventListener('click', function(event){
+            event.preventDefault();
+    let asu={{ auth()->user()->user_points }}-{{ $reward->product_points }};
+            Swal.fire({
+                title: 'Konfirmasi Penukaran Poin',
+                text: `Apakah Anda yakin ingin menukarkan poin sebesar {{ $reward->product_points }}, sehingga point Anda sisa ${asu} ?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#14B8A6',
+                cancelButtonColor: '#FF444E',
+                confirmButtonText: 'Ya',
+                cancelButtonText: 'Tidak'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.querySelector('form[action="/rewards/redeem/{{ $reward->id }}"]').submit(); // Submit form
+                }
+            });
+        })
+    </script>
 @endsection
