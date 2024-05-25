@@ -2,14 +2,22 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Order;
 use GuzzleHttp\Client;
-use Illuminate\Contracts\Session\Session;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Validator;
 
 class OrderController extends Controller
 {
-    private $apiUrl = 'https://dev-lakeside.matradipti.org/api';
-    private $token = '177|QcqnArHgR22GI7dfwhfaGSK1c1wQFE4g25SMWode';
+    private $apiUrl;
+    private $token;
+
+    public function __construct()
+    {
+        $this->apiUrl = env('API_URL');
+        $this->token = env('API_TOKEN');
+    }
 
     public function index()
     {
@@ -21,8 +29,8 @@ class OrderController extends Controller
     public function pembelian()
     {
         $client = new Client();
+        $groupedData = [];
 
-        // Step 1: Gunakan token untuk mendapatkan data menu
         try {
             $response = $client->get($this->apiUrl . '/menu', [
                 'headers' => [
@@ -33,19 +41,14 @@ class OrderController extends Controller
             $data = json_decode($response->getBody(), true);
 
             if ($data['status'] == 'Success') {
-                // Sort the data by 'category_id'
                 usort($data['data'], function ($a, $b) {
                     return $a['category_id'] <=> $b['category_id'];
                 });
 
                 $groupedData = $this->groupByCategory($data['data']);
-            } else {
-                $groupedData = [];
             }
-
         } catch (\Exception $e) {
             // Handle error
-            $groupedData = [];
         }
 
         return view('menu', [
@@ -67,6 +70,7 @@ class OrderController extends Controller
     {
         $menuItem = $request->input('menu_item');
         $quantity = $request->input('quantity');
+        $price = $request->input('price');
 
         $basket = Session::get('basket', []);
         if (isset($basket[$menuItem])) {
@@ -75,7 +79,7 @@ class OrderController extends Controller
             $basket[$menuItem] = [
                 'menu_name' => $menuItem,
                 'quantity' => $quantity,
-                'price' => $request->input('price'),
+                'price' => $price,
             ];
         }
 
@@ -106,5 +110,48 @@ class OrderController extends Controller
         Session::put('basket', $basket);
 
         return response()->json(['basket' => $basket]);
+    }
+
+    public function createOrder(Request $request)
+    {
+        // Validasi data
+        $validator = Validator::make($request->all(), [
+            'order' => 'required|array',
+            'order.*.menu_name' => 'required|string',
+            'order.*.quantity' => 'required|integer|min:1',
+            'order.*.price' => 'required|integer|min:0',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 422);
+        }
+
+        // Ambil item dari session atau request
+        $basket = $request->input('order', []);
+
+        // Logika penyimpanan pesanan
+        foreach ($basket as $item) {
+            Order::create([
+                'user_id' => $request->user()->id,
+                'menu_name' => $item['menu_name'],
+                'quantity' => $item['quantity'],
+                'price' => $item['price'],
+            ]);
+        }
+
+        // Kosongkan keranjang setelah membuat pesanan
+        Session::forget('basket');
+
+        // Redirect ke halaman success
+        return response()->json(['success' => true, 'redirect' => route('order.success')], 200);
+    }
+
+    public function showSuccessPage()
+    {
+        return view('purchased-successfull');
+    }
+
+    public function inputKode(){
+        return view('inputKode');
     }
 }

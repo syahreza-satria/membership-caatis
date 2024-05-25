@@ -169,3 +169,13 @@ form .button-login {
     background-image: linear-gradient(var(--secondary), var(--primary));
     border-radius: 10px;
 }
+
+/* SUCCES PAGE */
+.purchased-success svg {
+    color: #72ba25;
+    transition: color 1s ease;
+}
+
+.purchased-success svg:hover {
+    color: #ddf8a8;
+}
