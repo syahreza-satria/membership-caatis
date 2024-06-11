@@ -1,12 +1,17 @@
 <?php
 
+// app/Http/Controllers/OrderController.php
+
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Models\VerificationCode;
 use GuzzleHttp\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
+use Carbon\Carbon;
 
 class OrderController extends Controller
 {
@@ -66,52 +71,6 @@ class OrderController extends Controller
         return $grouped;
     }
 
-    public function addToBasket(Request $request)
-    {
-        $menuItem = $request->input('menu_item');
-        $quantity = $request->input('quantity');
-        $price = $request->input('price');
-
-        $basket = Session::get('basket', []);
-        if (isset($basket[$menuItem])) {
-            $basket[$menuItem]['quantity'] += $quantity;
-        } else {
-            $basket[$menuItem] = [
-                'menu_name' => $menuItem,
-                'quantity' => $quantity,
-                'price' => $price,
-            ];
-        }
-
-        Session::put('basket', $basket);
-
-        return response()->json(['basket' => $basket]);
-    }
-
-    public function getBasket()
-    {
-        $basket = Session::get('basket', []);
-        return response()->json(['basket' => $basket]);
-    }
-
-    public function removeFromBasket(Request $request)
-    {
-        $menuItem = $request->input('menu_item');
-
-        $basket = Session::get('basket', []);
-        if (isset($basket[$menuItem])) {
-            if ($basket[$menuItem]['quantity'] > 1) {
-                $basket[$menuItem]['quantity'] -= 1;
-            } else {
-                unset($basket[$menuItem]);
-            }
-        }
-
-        Session::put('basket', $basket);
-
-        return response()->json(['basket' => $basket]);
-    }
-
     public function createOrder(Request $request)
     {
         // Validasi data
@@ -129,29 +88,111 @@ class OrderController extends Controller
         // Ambil item dari session atau request
         $basket = $request->input('order', []);
 
+        // Ambil timestamp saat ini
+        $timestamp = now();
+
+        $totalPrice = 0;
+        $orderData = [];
+
         // Logika penyimpanan pesanan
         foreach ($basket as $item) {
-            Order::create([
+            $order = Order::create([
                 'user_id' => $request->user()->id,
                 'menu_name' => $item['menu_name'],
                 'quantity' => $item['quantity'],
                 'price' => $item['price'],
+                'created_at' => $timestamp
             ]);
+            $totalPrice += $item['price'] * $item['quantity'];
+            $orderData[] = $order->toArray();
         }
+
+        // Hitung poin yang akan ditambahkan
+        $pointsToAdd = intdiv($totalPrice, 10000);
+
+        // Tambahkan poin ke pengguna
+        $user = $request->user();
+        $user->addPoints($pointsToAdd);
+
+        // Simpan data pesanan dan poin yang bertambah ke session
+        Session::put('recent_order', $orderData);
+        Session::put('points_added', $pointsToAdd);
 
         // Kosongkan keranjang setelah membuat pesanan
         Session::forget('basket');
 
-        // Redirect ke halaman success
-        return response()->json(['success' => true, 'redirect' => route('order.success')], 200);
+        // Redirect ke halaman input kode
+        return response()->json([
+            'success' => true, 
+            'redirect' => route('order.inputKode')
+        ], 200);
     }
 
-    public function showSuccessPage()
+    public function inputKode()
     {
-        return view('purchased-successfull');
+        return view('inputKode');
     }
 
-    public function inputKode(){
-        return view('inputKode');
+    public function verifyCode(Request $request)
+    {
+        $today = Carbon::today();
+        $validCode = VerificationCode::where('date', $today)->value('code');
+
+        if ($request->code === $validCode) {
+            // Ambil poin yang ditambahkan dari session
+            $pointsAdded = Session::get('points_added', 0);
+            // Redirect ke halaman success dengan poin yang bertambah
+            return redirect()->route('order.success', ['pointsAdded' => $pointsAdded]);
+        }
+
+        return back()->withErrors(['code' => 'Invalid code']);
+    }
+
+    public function generateCode()
+    {
+        $today = Carbon::today();
+
+        $verificationCode = VerificationCode::firstOrCreate(
+            ['date' => $today],
+            ['code' => str_pad(rand(0, 999999), 6 ,'0', STR_PAD_LEFT)]
+        );
+
+        return $verificationCode->code;
+    }
+
+    public function showCode()
+    {
+        $today = Carbon::today();
+        $code = VerificationCode::where('date', $today)->value('code');
+
+        if (!$code) {
+            $code = $this->generateCode();
+        }
+
+        return view('show-code', ['code' => $code, 'banner' => 'KODE HARI INI']);
+    }
+
+    public function showSuccessPage(Request $request)
+    {
+        // Ambil timestamp pesanan terbaru
+        $latestOrderTimestamp = Order::where('user_id', auth()->id())->max('created_at');
+
+        // Konversi timestamp menjadi objek carbon
+        $latestOrderTimestamp = Carbon::parse($latestOrderTimestamp);
+
+        // Ambil semua pesanan dengan timestamp yang sama
+        $orders = Order::where('user_id', auth()->id())
+                        ->where('created_at', $latestOrderTimestamp)
+                        ->get();
+
+        // Hitung total harga
+        $totalPrice = $orders->sum(function($order){
+            return $order->quantity * $order->price;
+        });
+
+        // Ambil poin yang ditambahkan dari parameter
+        $pointsAdded = $request->get('pointsAdded', 0);
+
+        return view('purchased-successfull', compact('orders', 'totalPrice', 'latestOrderTimestamp', 'pointsAdded'));
     }
 }

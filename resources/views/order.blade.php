@@ -7,13 +7,13 @@
             <img src="/img/CabangLakeside.png" class="rounded-3" style="border: 1px solid #14B8A6" alt="Lakeside" width="70">
             <h3 class="font-16 fw-bold my-auto ms-3">Lakeside</h3>
         </a>
-        <a class="w-100 mb-2 shadow-sm d-flex rounded-3 text-decoration-none text-dark" href="/order/menu">
+        {{-- <a class="w-100 mb-2 shadow-sm d-flex rounded-3 text-decoration-none text-dark" href="/order/menu">
             <img src="/img/CabangFIT.png" class="rounded-3" style="border: 1px solid #14B8A6" alt="Lakeside" width="70">
             <h3 class="font-16 fw-bold my-auto ms-3">Lakeside FIT+</h3>
         </a>
         <a class="w-100 mb-2 shadow-sm d-flex rounded-3 text-decoration-none text-dark" href="/order/menu">
             <img src="/img/CabangLiterasiCafe.png" class="rounded-3" style="border: 1px solid #14B8A6" alt="Lakeside" width="70">
             <h3 class="font-16 fw-bold my-auto ms-3">Literasi Cafe</h3>
-        </a>
+        </a> --}}
     </main>
 @endsection

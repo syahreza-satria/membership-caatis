@@ -17,5 +17,12 @@ class DatabaseSeeder extends Seeder
     {
         User::factory(10)->create();
         Reward::factory(10)->create();
+
+        User::create([
+            'name' => 'Syahreza Satria Alfath',
+            'email' => 'goodypie013@gmail.com',
+            'password' => 'password',
+            'phone_number' => '085298240941',
+        ]);
     }
 }

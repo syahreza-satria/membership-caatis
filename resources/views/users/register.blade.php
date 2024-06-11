@@ -22,7 +22,7 @@
             </div>
             <div class="mb-2">
                 <label for="email" class="form-label font-14 fw-bold  mb-1">E-mail</label>
-                <input type="email" class="form-control " id="email" placeholder="Masukkan email" name="email" value="{{ old('name') }}">
+                <input type="email" class="form-control " id="email" placeholder="Masukkan email" name="email" value="{{ old('email') }}">
                 
                 @error('email')
                     <p class="text-danger font-14 mt-1">{{ $message }}</p>
@@ -30,7 +30,7 @@
             </div>
             <div class="mb-2">
                 <label for="nomor-handphone" class="form-label font-14 fw-bold  mb-1">Nomor Handphone</label>
-                <input type="tel" class="form-control " id="nomor-handphone" placeholder="Masukkan nomor handphone" name="phone_number" value="{{ old('name') }}">
+                <input type="tel" class="form-control " id="nomor-handphone" placeholder="Masukkan nomor handphone" name="phone_number" value="{{ old('phone_number') }}">
 
                 @error('phone_number')
                     <p class="text-danger font-14 mt-1">{{ $message }}</p>

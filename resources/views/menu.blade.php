@@ -206,7 +206,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return response.json();
         }).then(data => {
             if (data.success) {
-                window.location.href = '{{ route('order.success') }}';
+                window.location.href = '{{ route('order.inputKode') }}';
             }
         }).catch(error => {
             console.error('Error:', error);
