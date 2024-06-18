@@ -13,30 +13,33 @@
         <form action="/users" method="POST">
             @csrf
             <div class="mb-2">
-                <label for="nama-lengkap" class="form-label font-14 fw-bold  mb-1">Nama Lengkap</label>
-                <input type="text" class="form-control " id="nama-lengkap" placeholder="Masukkan nama lengkap" name="name" value="{{ old('name') }}">
+                <label for="fullname" class="form-label font-14 fw-bold  mb-1">Nama Lengkap</label>
+                <input type="text" class="form-control " id="fullname" placeholder="Masukkan nama lengkap"
+                    name="fullname" value="{{ old('fullname') }}">
 
-                @error('name')
+                @error('fullname')
                     <p class="text-danger font-14 mt-1">{{ $message }}</p>
                 @enderror
             </div>
             <div class="mb-2">
                 <label for="email" class="form-label font-14 fw-bold  mb-1">E-mail</label>
-                <input type="email" class="form-control " id="email" placeholder="Masukkan email" name="email" value="{{ old('email') }}">
-                
+                <input type="email" class="form-control " id="email" placeholder="Masukkan email" name="email"
+                    value="{{ old('email') }}">
+
                 @error('email')
                     <p class="text-danger font-14 mt-1">{{ $message }}</p>
                 @enderror
             </div>
             <div class="mb-2">
-                <label for="nomor-handphone" class="form-label font-14 fw-bold  mb-1">Nomor Handphone</label>
-                <input type="tel" class="form-control " id="nomor-handphone" placeholder="Masukkan nomor handphone" name="phone_number" value="{{ old('phone_number') }}">
+                <label for="phone" class="form-label font-14 fw-bold  mb-1">Nomor Handphone</label>
+                <input type="tel" class="form-control " id="phone" placeholder="Masukkan nomor handphone"
+                    name="phone" value="{{ old('phone') }}">
 
-                @error('phone_number')
+                @error('phone')
                     <p class="text-danger font-14 mt-1">{{ $message }}</p>
                 @enderror
             </div>
-            <div class="mb-4">
+            <div class="mb-2">
                 <label for="password" class="form-label font-14 fw-bold  mb-1">Password</label>
                 <input type="password" class="form-control " id="password" placeholder="Masukkan password" name="password">
 
@@ -46,15 +49,18 @@
             </div>
             <div class="mb-4">
                 <label for="password" class="form-label font-14 fw-bold  mb-1">Konfirmasi Password</label>
-                <input type="password" class="form-control " id="password" placeholder="Masukkan Ulang password" name="password_confirmation">
+                <input type="password" class="form-control " id="password" placeholder="Masukkan Ulang password"
+                    name="password_confirmation">
 
                 @error('password_confirmation')
                     <p class="text-danger font-14 mt-1">{{ $message }}</p>
                 @enderror
             </div>
-            <button type="submit" class="btn fw-bold w-100 font-14 button-login">Daftar</button>
-            <h3 class="font-14 fw-bold mb-3 mt-3  text-center ">Sudah Punya Akun?</h3>
-            <a href="/login" class="btn fw-bold w-100 font-14 button-register">Masuk</a>
+            <button type="submit" class="btn fw-bold w-100 font-14 button-login">Daftar Akun</button>
+            <h3 class="font-14 fw-bold mb-3 mt-3  text-center ">SUDAH MEMILIKI AKUN?</h3>
+            <a href="/login" class="btn fw-bold w-100 font-14 button-register mb-2">Masuk dengan nomor</a>
+            <a href="/loginsso" class="w-100 btn button-sso fw-bold mb-2"><img src="/img/logoTelkom.png" alt="logo telkom"
+                    height="16"> Masuk Dengan SSO</a>
         </form>
     </section>
     {{-- Headline End --}}

@@ -21,6 +21,10 @@
     background-color: #e6fefb;
 }
 
+.background-sso {
+    background: linear-gradient(to bottom, #ed1c24, #dc161c);
+}
+
 .background-gradient {
     background: linear-gradient(to bottom, #2dd4bf, #14b8a6);
 }
@@ -75,6 +79,7 @@
 
 body {
     font-family: "Figtree", sans-serif !important;
+    height: auto;
 }
 
 /* AUTHENTICATION */
@@ -88,6 +93,7 @@ form button {
 }
 
 form .button-register {
+    border: 2px solid;
     border-color: var(--primary);
     background-color: var(--white);
     color: var(--primary);
@@ -97,9 +103,28 @@ form .button-register {
 }
 
 form .button-login {
+    border: 2px solid;
     border-color: var(--primary);
     background-color: var(--primary);
     color: var(--white);
+    padding-top: 8px;
+    padding-bottom: 8px;
+    border-radius: 10px !important;
+}
+
+form .button-login-sso {
+    border: 2px solid;
+    color: var(--white);
+    padding-top: 8px;
+    padding-bottom: 8px;
+    border-radius: 10px !important;
+}
+
+form .button-sso {
+    border: 2px solid;
+    border-color: #ed1c24;
+    background-color: var(--white);
+    color: #ed1c24;
     padding-top: 8px;
     padding-bottom: 8px;
     border-radius: 10px !important;

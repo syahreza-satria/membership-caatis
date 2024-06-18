@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 
 class UserController extends Controller
 {
@@ -16,9 +19,9 @@ class UserController extends Controller
     // Create New User
     public function store(Request $request){
         $formFields = $request->validate([
-            'name' => ['required', 'min:3'],
+            'fullname' => ['required', 'min:3'],
             'email' => ['required', 'email', Rule::unique('users', 'email')],
-            'phone_number' => ['required', 'min:9', 'max:14', 'string', Rule::unique('users')],
+            'phone' => ['required', 'min:9', 'max:14', 'string', Rule::unique('users')],
             'password' => ['required', 'confirmed', 'min:6']
         ]);
 
@@ -54,13 +57,13 @@ class UserController extends Controller
     {
         // dd($request);
         $request->validate([
-            'phone_number' => 'required',
+            'phone' => 'required',
             'password' => 'required',
         ]);
         
-        // Custom credentials using 'phone_number' instead of 'email'
+        // Custom credentials using 'phone' instead of 'email'
         $credentials = [
-            'phone_number' => $request->input('phone_number'),
+            'phone' => $request->input('phone'),
             'password' => $request->input('password'),
         ];
         // dd($credentials);
@@ -70,6 +73,62 @@ class UserController extends Controller
             return redirect()->intended('/');
         }
 
-        return back()->withErrors(['phone_number' => 'Invalid Credentials'])->onlyInput('phone_number');
+        return back()->withErrors(['phone' => 'Invalid Credentials'])->onlyInput('phone');
+    }
+
+    public function showSsoLoginForm()
+    {
+        return view('users.loginSso');
+    }
+
+    public function authenticateSso(Request $request)
+    {
+        // Validate the incoming request
+        $request->validate([
+            'username' => 'required|string',
+            'password' => 'required|string',
+        ]);
+
+        // Authenticate with the external API
+        $response = Http::post('https://api-gateway.telkomuniversity.ac.id/issueauth', [
+            'username' => $request->username,
+            'password' => $request->password,
+        ]);
+
+        if ($response->failed()) {
+            return back()->withErrors(['username' => 'Login failed. Please check your credentials and try again.']);
+        }
+
+        // Extract the token from the response
+        $token = $response->json()['token'];
+
+        // Get the user profile from the external API using the token
+        $profileResponse = Http::withToken($token)->get('https://api-gateway.telkomuniversity.ac.id/issueprofile');
+
+        if ($profileResponse->failed()) {
+            return back()->withErrors(['username' => 'Failed to retrieve user profile.']);
+        }
+
+        $profile = $profileResponse->json();
+
+        // Check if the user already exists
+        $user = User::where('email', $profile['email'])->first();
+
+        if (!$user) {
+            // Create a new user if it doesn't exist
+            $user = new User();
+            $user->fullname = $profile['fullname'];
+            $user->email = $profile['email'];
+            $user->password = Hash::make($request->password); // Hash the password for security
+            $user->phone = $profile['phone'];
+            $user->user_points = 700; // default points
+
+            $user->save();
+        }
+
+        // Log the user in
+        Auth::login($user);
+
+        return redirect()->intended('/');
     }
 }

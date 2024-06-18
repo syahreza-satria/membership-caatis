@@ -1,7 +1,5 @@
 <?php
 
-// app/Http/Controllers/OrderController.php
-
 namespace App\Http\Controllers;
 
 use App\Models\Order;
@@ -78,48 +76,15 @@ class OrderController extends Controller
             'order' => 'required|array',
             'order.*.menu_name' => 'required|string',
             'order.*.quantity' => 'required|integer|min:1',
-            'order.*.price' => 'required|integer|min:0',
+            'order.*.price' => 'required|numeric|min:0',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['error' => $validator->errors()], 422);
         }
 
-        // Ambil item dari session atau request
-        $basket = $request->input('order', []);
-
-        // Ambil timestamp saat ini
-        $timestamp = now();
-
-        $totalPrice = 0;
-        $orderData = [];
-
-        // Logika penyimpanan pesanan
-        foreach ($basket as $item) {
-            $order = Order::create([
-                'user_id' => $request->user()->id,
-                'menu_name' => $item['menu_name'],
-                'quantity' => $item['quantity'],
-                'price' => $item['price'],
-                'created_at' => $timestamp
-            ]);
-            $totalPrice += $item['price'] * $item['quantity'];
-            $orderData[] = $order->toArray();
-        }
-
-        // Hitung poin yang akan ditambahkan
-        $pointsToAdd = intdiv($totalPrice, 10000);
-
-        // Tambahkan poin ke pengguna
-        $user = $request->user();
-        $user->addPoints($pointsToAdd);
-
-        // Simpan data pesanan dan poin yang bertambah ke session
-        Session::put('recent_order', $orderData);
-        Session::put('points_added', $pointsToAdd);
-
-        // Kosongkan keranjang setelah membuat pesanan
-        Session::forget('basket');
+        // Simpan data pesanan ke session
+        Session::put('basket', $request->input('order', []));
 
         // Redirect ke halaman input kode
         return response()->json([
@@ -139,10 +104,10 @@ class OrderController extends Controller
         $validCode = VerificationCode::where('date', $today)->value('code');
 
         if ($request->code === $validCode) {
-            // Ambil poin yang ditambahkan dari session
-            $pointsAdded = Session::get('points_added', 0);
-            // Redirect ke halaman success dengan poin yang bertambah
-            return redirect()->route('order.success', ['pointsAdded' => $pointsAdded]);
+            // Set flag in session indicating the code is valid
+            Session::put('code_verified', true);
+            // Redirect ke halaman success
+            return redirect()->route('order.success');
         }
 
         return back()->withErrors(['code' => 'Invalid code']);
@@ -174,10 +139,44 @@ class OrderController extends Controller
 
     public function showSuccessPage(Request $request)
     {
+        if (!Session::get('code_verified', false)) {
+            return redirect()->route('order.inputKode')->withErrors(['code' => 'Verification code not verified']);
+        }
+
+        // Ambil item dari session
+        $basket = Session::get('basket', []);
+        $timestamp = now();
+        $totalPrice = 0;
+        $orderData = [];
+
+        // Logika penyimpanan pesanan
+        foreach ($basket as $item) {
+            $itemTotalPrice = $item['price'] * $item['quantity'];
+            $order = Order::create([
+                'user_id' => $request->user()->id,
+                'menu_name' => $item['menu_name'],
+                'quantity' => $item['quantity'],
+                'price' => $item['price'],
+                'total_price' => $itemTotalPrice,
+                'created_at' => $timestamp
+            ]);
+            $totalPrice += $itemTotalPrice;
+            $orderData[] = $order->toArray();
+        }
+
+        // Hitung poin yang akan ditambahkan
+        $pointsToAdd = intdiv($totalPrice, 10000);
+
+        // Tambahkan poin ke pengguna
+        $user = $request->user();
+        $user->addPoints($pointsToAdd);
+
+        // Kosongkan keranjang setelah membuat pesanan
+        Session::forget('basket');
+        Session::forget('code_verified');
+
         // Ambil timestamp pesanan terbaru
         $latestOrderTimestamp = Order::where('user_id', auth()->id())->max('created_at');
-
-        // Konversi timestamp menjadi objek carbon
         $latestOrderTimestamp = Carbon::parse($latestOrderTimestamp);
 
         // Ambil semua pesanan dengan timestamp yang sama
@@ -190,9 +189,6 @@ class OrderController extends Controller
             return $order->quantity * $order->price;
         });
 
-        // Ambil poin yang ditambahkan dari parameter
-        $pointsAdded = $request->get('pointsAdded', 0);
-
-        return view('purchased-successfull', compact('orders', 'totalPrice', 'latestOrderTimestamp', 'pointsAdded'));
+        return view('purchased-successfull', compact('orders', 'totalPrice', 'latestOrderTimestamp', 'pointsToAdd'));
     }
 }

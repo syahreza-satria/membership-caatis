@@ -1,24 +1,24 @@
-@extends('layouts/layout-auth')
+@extends('layouts/layout-auth-sso')
 
 @section('authentication')
     {{-- Headline Start --}}
     <section class=" mb-2 ">
         <h1 class=" mb-2 fw-bold font-20">Halo! Selamat Datang.</h1>
-        <p class=" fw-normal font-14 lh-sm">Silahkan memasukkan Nomor Handphone dan Password kamu untuk masuk klaim voucher
-            kamu</p>
+        <p class=" fw-normal font-14 lh-sm">Silahkan memasukkan Username dan Password yang telah berkaitan dengan
+            akun SSO kampus!</p>
     </section>
     {{-- Headline End --}}
 
     {{-- Form Start --}}
-    <section class=" mb-5 ">
-        <form action="/users/authenticate" method="POST">
+    <section class="mb-5">
+        <form action="/users/sso" method="POST">
             @csrf
             <div class="mb-2">
-                <label for="phone" class=" form-label font-14 fw-bold mb-1">No Handphone</label>
-                <input type="tel" name="phone" id="phone" placeholder="Masukkan No Handphone" class="form-control"
-                    value="{{ old('phone') }}">
+                <label for="username" class=" form-label font-14 fw-bold mb-1">Username</label>
+                <input type="text" name="username" id="username" placeholder="Masukkan username" class="form-control"
+                    value="{{ old('username') }}">
 
-                @error('phone')
+                @error('username')
                     <p class="text-danger font-14 mt-1">{{ $message }}</p>
                 @enderror
             </div>
@@ -31,11 +31,11 @@
                     <p class="text-danger font-14 mt-1">{{ $message }}</p>
                 @enderror
             </div>
-            <button type="submit" class="btn w-100 button-login fw-bold my-2">Masuk</button>
-            <a href="/register" class="w-100 btn button-register fw-bold">Registrasi</a>
-            <p class="fw-bold font-14 text-center my-2">Atau</p>
-            <a href="/loginsso" class="w-100 btn button-sso fw-bold mb-2"><img
-                    src="{{ asset('/img/ic_telkomUniversity.png') }}" alt="logo telkom" height="16"> Masuk Dengan SSO</a>
+            <button type="submit" class="btn w-100 button-login-sso background-sso fw-semibold mt-2"><img
+                    src="{{ asset('/img/ic_telkomUniversity.png') }}" alt="telkom university" width="20" class="me-1">
+                Masuk Dengan SSO</button>
+            <p class="fw-bold font-14 text-center my-2">ATAU</p>
+            <a href="/login" class="w-100 btn button-register fw-semibold mb-2">Masuk dengan nomor</a>
         </form>
     </section>
     {{-- Form End --}}

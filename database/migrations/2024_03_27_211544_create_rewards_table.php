@@ -18,6 +18,7 @@ class CreateRewardsTable extends Migration
             $table->string('title');
             $table->integer('product_points');
             $table->longText('description');
+            $table->string('image_path')->nullable();
             $table->boolean('redeemed')->default(false);
             $table->timestamps();
         });

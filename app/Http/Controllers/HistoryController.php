@@ -2,13 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Order;
 use App\Models\Reward;
 use Illuminate\Http\Request;
 use App\Models\rewards_history_log;
 
 class HistoryController extends Controller
 {
-    public function index(Request $request)
+    public function index()
+    {
+        return view('history', [
+            'banner' => "RIWAYAT"
+        ]);
+    }
+
+    public function rewardHistory(Request $request)
     {
         $data = rewards_history_log::select(
             "users.user_points",
@@ -24,9 +32,20 @@ class HistoryController extends Controller
         ->orderByDesc("rewards_history_log.created_at")
         ->get();
 
-        return view('history', [
+        return view('historyReward', [
             'history' => $data,  // Pass the relevant history data to the view
             'banner' => "RIWAYAT"
+        ]);
+    }
+
+    public function orderHistory()
+    {
+        // ambil riwayat pesanan pengguna yang sedang login
+        $orders = Order::where('user_id', auth()->id())->orderBy('created_at', 'desc')->get();
+
+        return view('historyOrder', [
+            'orders' => $orders, 
+            'banner' => 'RIWAYAT'
         ]);
     }
 }

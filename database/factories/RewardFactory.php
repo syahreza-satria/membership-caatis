@@ -14,7 +14,7 @@ class RewardFactory extends Factory
     public function definition()
     {
         return [
-            'title' => $this->faker->sentence(),
+            'title' => $this->faker->sentence(1),
             'product_points' => $this->faker->numberBetween(10,100),
             'description' => $this->faker->paragraph(3),
         ];
