@@ -40,11 +40,14 @@ class HistoryController extends Controller
 
     public function orderHistory()
     {
-        // ambil riwayat pesanan pengguna yang sedang login
-        $orders = Order::where('user_id', auth()->id())->orderBy('created_at', 'desc')->get();
+        // Ambil riwayat pesanan pengguna yang sedang login, disortir berdasarkan waktu pembuatan terbaru
+        $orders = Order::where('user_id', auth()->id())
+                       ->orderByDesc('created_at')
+                       ->with('orderDetails') // Eager load orderDetails
+                       ->get();
 
         return view('historyOrder', [
-            'orders' => $orders, 
+            'orders' => $orders,
             'banner' => 'RIWAYAT'
         ]);
     }

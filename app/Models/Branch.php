@@ -5,16 +5,17 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class rewards_history_log extends Model
+class Branch extends Model
 {
     use HasFactory;
 
-    protected $table = "rewards_history_log";
     protected $fillable = [
-        'user_id',
-        'rewards_id',
-        'rewards_history_log_type_id'
+        'name', 'address', 'logo'
     ];
-}
 
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+}
 

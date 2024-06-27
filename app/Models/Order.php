@@ -10,6 +10,21 @@ class Order extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'menu_name', 'quantity', 'price', 'total_price'
+        'user_id', 'branch_id', 'status', 'total_price'
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
+    public function orderDetails()
+    {
+        return $this->hasMany(OrderDetail::class);
+    }
 }

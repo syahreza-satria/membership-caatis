@@ -9,29 +9,39 @@
         @else
             <ul class="w-100 list-unstyled">
                 @foreach ($orders as $order)
-                    <li class="w-100 list-unstyled" style="height: 50px; margin-bottom: 35px">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div class="d-flex align-items-center">
-                                <img src="/img/CabangLakeside.png" alt="image" width="50" height="50"
-                                    style="border-radius: 10px">
-                                <div class="ms-3">
-                                    <h3 class="font-14 fw-bold mb-0">{{ $order->menu_name }} x{{ $order->quantity }}</h3>
-                                    <p class="font-10 fw-semibold text-secondary mb-0">
-                                        {{ $order->created_at->format('Y M d') }},
-                                        {{ $order->created_at->diffForHumans() }}</p>
+                    <h3 class="fw-bold font-14">OrderID: {{ $order->id }}</h3>
+                    @foreach ($order->orderDetails as $detail)
+                        <li class="w-100 list-unstyled" style="margin-bottom: 35px">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center">
+                                    <img src="/img/CabangLakeside.png" alt="image" width="50" height="50"
+                                        style="border-radius: 10px">
+                                    <div class="ms-3">
+                                        <h3 class="font-14 fw-bold mb-0">{{ $detail->menu_name }} x{{ $detail->quantity }}
+                                        </h3>
+                                        <p class="font-12 fw-semibold text-secondary mb-0">
+                                            {{ $order->created_at->format('Y M d') }},
+                                            {{ $order->created_at->diffForHumans() }}
+                                        </p>
+                                    </div>
                                 </div>
+                                <p class="font-12 fw-bold my-auto text-end">
+                                    Rp {{ number_format($order->total_price) }}
+                                    <br>
+                                    @php
+                                        $pointsAdded = intdiv($order->total_price, 10000);
+                                    @endphp
+                                    +{{ $pointsAdded }} Poin
+                                </p>
                             </div>
-                            <p class="font-10 fw-bold my-auto text-end">
-                                {{ number_format($order->total_price, 2) }}
-                                <br>
-                                @php
-                                    $pointsAdded = intdiv($order->total_price, 10000);
-                                @endphp
-                                +{{ $pointsAdded }} Poin
-                            </p>
-                        </div>
-                        <hr>
-                    </li>
+                            @if ($detail->note)
+                                <p class="font-12 mt-1"><strong>Catatan:</strong> {{ $detail->note }}</p>
+                            @else
+                                <p class="font-12 mt-1"><strong>Catatan:</strong> -</p>
+                            @endif
+                            <hr>
+                        </li>
+                    @endforeach
                 @endforeach
             </ul>
         @endif

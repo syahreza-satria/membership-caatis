@@ -12,11 +12,19 @@ class Reward extends Model
     protected $fillable = [
         'title',
         'description',
-        'product_points'
+        'product_points',
+        'image_path',
+        'redeemed'
     ];
 
     public function users()
     {
         return $this->belongsToMany(User::class)->withPivot('redeemed_at');
+    }
+
+    public function markAsRedeemed()
+    {
+        $this->redeemed = true;
+        $this->save();
     }
 }

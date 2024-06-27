@@ -18,6 +18,8 @@ class RewardController extends Controller
      */
     public function index()
     {
+
+        session()->forget('basket');
         // dd(request()->tag);
         return view('rewards.index',[
             'rewards' => Reward::all(),

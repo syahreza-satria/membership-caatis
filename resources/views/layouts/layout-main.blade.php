@@ -10,6 +10,7 @@
     <!-- Tambahkan ini di file layout utama -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet">
 
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
     {{-- Style, Bootstrap v5.3 --}}
     <link rel="stylesheet" href="/css/style.css">

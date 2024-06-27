@@ -45,6 +45,10 @@
     font-size: 32px;
 }
 
+.font-24 {
+    font-size: 24px;
+}
+
 .font-20 {
     font-size: 20px;
 }
@@ -203,4 +207,62 @@ form .button-sso {
 
 .purchased-success svg:hover {
     color: #ddf8a8;
+}
+
+/* Modal */
+.bottom-drawer {
+    position: fixed;
+    bottom: -100%;
+    left: 0;
+    width: 100%;
+    height: 85vh;
+    background-color: white;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    transition: bottom 0.3s ease-in-out;
+    z-index: 1050;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.drawer-header,
+.drawer-footer {
+    padding: 1rem;
+    border-bottom: 1px solid #ddd;
+}
+
+.drawer-body {
+    padding: 1rem;
+    overflow-y: auto;
+    flex-grow: 1;
+}
+
+.drawer-footer {
+    padding: 1rem;
+    background: #f9f9f9;
+    border-top: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.btn-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+.qty-controls {
+    display: flex;
+    align-items: center;
+}
+
+.fixed-bottom {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1050;
+    padding: 1rem;
 }

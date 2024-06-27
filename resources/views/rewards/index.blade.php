@@ -34,7 +34,8 @@
                         @if (!$redeemed)
                             <a href="/rewards/{{ $reward->id }}" class="text-decoration-none text-dark">
                         @endif
-                        <img class="w-100 h-auto {{ $redeemed ? 'grayscale' : '' }}" src="/img/Minuman.png" alt="minuman" />
+                        <img class="w-100 h-auto {{ $redeemed ? 'grayscale' : '' }}"
+                            src="{{ asset('storage/' . $reward->image_path) }}" alt="{{ $reward->title }}" />
                         <div class="card-container">
                             {{-- <span class="color-primary font-10 fw-bold ">{{ $reward->tags }}</span> --}}
                             <h4 class="mt-2 font-14 fw-normal"><b>{{ $reward->title }}</b></h4>

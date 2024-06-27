@@ -11,8 +11,22 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
-    public function rewards(){
-        return $this->belongsToMany(Reward::class)->withPivot('redeemed_at');
+
+    protected $fillable = [
+        'fullname', 'email', 'password', 'phone', 'user_points', 'is_admin'
+    ];
+
+    protected $hidden = [
+        'password', 'remember_token',
+    ];
+
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+    ];
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
     }
 
     public function addPoints($points)
@@ -21,41 +35,19 @@ class User extends Authenticatable
         $this->save();
     }
 
+    public function rewards()
+    {
+        return $this->belongsToMany(Reward::class)->withPivot('redeemed_at');
+    }
+
     public function redeemReward(Reward $reward)
     {
         if($this->user_points >= $reward->product_points){
-            $this->user_points = $this->user_points - $reward->product_points;
+            $this->user_points -= $reward->product_points;
             $this->save();
             return true;
-        } else{
+        } else {
             return false;
         }
     }
-
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
-    protected $fillable = [
-        'fullname', 'email', 'password', 'phone', 'user_points'
-    ];
-
-    /**
-     * The attributes that should be hidden for arrays.
-     *
-     * @var array
-     */
-    protected $hidden = [
-        'password', 'remember_token',
-    ];
-
-    /**
-     * The attributes that should be cast to native types.
-     *
-     * @var array
-     */
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-    ];
 }

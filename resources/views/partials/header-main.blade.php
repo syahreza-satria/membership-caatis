@@ -16,7 +16,7 @@
                 </li>
                 <li>
                     <button class="dropdown-item" type="button">
-                        <a href="/order" class="text-decoration-none font-black">Pembelian</a>
+                        <a href="/branch" class="text-decoration-none font-black">Pembelian</a>
                     </button>
                 </li>
                 <li>
@@ -32,13 +32,13 @@
                 <li>
                     <form method="POST" action="/logout">
                         @csrf
-                        <button type="submit" class="dropdown-item" >
+                        <button type="submit" class="dropdown-item">
                             Keluar
                         </button>
                     </form>
                 </li>
-                </ul>
-          </div>
+            </ul>
+        </div>
     </div>
 </nav>
 {{-- Navbar End --}}
