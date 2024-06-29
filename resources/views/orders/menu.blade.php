@@ -61,6 +61,7 @@
                         <h5 class="fw-semibold" id="drawer-total-price">Rp 0</h5>
                     </div>
                 </div>
+                <input type="hidden" id="branchId" value="{{ $branch_id }}">
                 <button type="button" class="btn btn-primary" id="addToCartButton">Tambahkan ke Keranjang</button>
             </div>
         </div>
@@ -129,7 +130,6 @@
             });
 
             document.getElementById('increaseQty').addEventListener('click', function() {
-                console.log(qty);
                 qty++;
                 currentItem.quantity = qty;
                 document.getElementById('qtyInput').value = qty;
@@ -139,16 +139,36 @@
             document.getElementById('addToCartButton').addEventListener('click', function() {
                 qty = 1;
                 currentItem.note = document.getElementById('orderNote').value;
-                basket.push(currentItem);
 
-                // Update basket button
-                updateBasketButton();
+                // Dapatkan branch_id dari elemen hidden input atau elemen lain
+                const branchIdElement = document.getElementById('branchId');
 
-                // Hide drawer
-                document.getElementById('orderDrawer').style.bottom = '-100%';
+                if (branchIdElement) {
+                    let branch_id = branchIdElement.value;
 
-                // Save basket to session
-                saveBasketToSession(basket);
+                    // Tambahkan branch_id ke sessionStorage
+                    sessionStorage.setItem('branch_id', branch_id);
+
+                    // Tambahkan branch_id ke currentItem jika diperlukan
+                    currentItem.branch_id = branch_id;
+
+                    // Log branch_id untuk memastikan sudah ada
+                    console.log('Branch ID:', branch_id);
+                    console.log('Current Item:', currentItem);
+
+                    basket.push(currentItem);
+
+                    // Update basket button
+                    updateBasketButton();
+
+                    // Hide drawer
+                    document.getElementById('orderDrawer').style.bottom = '-100%';
+
+                    // Save basket to session
+                    saveBasketToSession(basket);
+                } else {
+                    console.error('Branch ID element not found');
+                }
             });
 
             function updateTotalPrice() {
@@ -156,19 +176,14 @@
                 document.getElementById('drawer-total-price').textContent = `Rp ${totalPrice.toLocaleString()}`;
             }
 
-            // Memperbarui tombol keranjang
             function updateBasketButton() {
                 const totalItems = basket.reduce((sum, item) => {
-                    const quantity = parseInt(item
-                        .quantity
-                    ); // Pastikan quantity diubah menjadi integer untuk menghindari operasi string
+                    const quantity = parseInt(item.quantity);
                     return sum + quantity;
                 }, 0);
 
                 const totalPrice = basket.reduce((sum, item) => {
-                    const price = parseInt(item
-                        .menu_price
-                    ); // Pastikan menu_price diubah menjadi integer untuk menghindari operasi string
+                    const price = parseInt(item.menu_price);
                     const quantity = parseInt(item.quantity);
                     return sum + (price * quantity);
                 }, 0);
@@ -184,15 +199,25 @@
             }
 
             function saveBasketToSession(basket) {
+                // Dapatkan branch_id dari sessionStorage
+                let branch_id = sessionStorage.getItem('branch_id');
+
                 fetch('/order/save-basket', {
-                    method: 'POST',
-                    body: JSON.stringify(basket),
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
-                            'content')
-                    }
-                });
+                        method: 'POST',
+                        body: JSON.stringify({
+                            basket: basket,
+                            branch_id: branch_id
+                        }),
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                                'content')
+                        }
+                    }).then(response => response.json())
+                    .then(data => {
+                        console.log('Save basket response:', data);
+                    })
+                    .catch(error => console.error('Error:', error));
             }
 
             document.getElementById('show-basket').addEventListener('click', function() {

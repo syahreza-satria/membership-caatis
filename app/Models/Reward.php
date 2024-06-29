@@ -10,11 +10,13 @@ class Reward extends Model
     use HasFactory;
 
     protected $fillable = [
+        'branch_id',
         'title',
         'description',
         'product_points',
         'image_path',
-        'redeemed'
+        'redeemed',
+        'is_active'
     ];
 
     public function users()
@@ -26,5 +28,10 @@ class Reward extends Model
     {
         $this->redeemed = true;
         $this->save();
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class, 'branch_id');
     }
 }

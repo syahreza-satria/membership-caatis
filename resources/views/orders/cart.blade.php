@@ -13,6 +13,7 @@
 
         <form id="checkout-form" method="POST" action="{{ route('checkout') }}">
             @csrf
+            <input type="hidden" name="branch_id" value="{{ $branch_id }}">
             @forelse($orderDetails as $index => $item)
                 <div class="w-100 mb-3" data-index="{{ $index }}">
                     <div class="mb-1 d-flex justify-content-between">
@@ -73,6 +74,8 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            const branchId = '{{ $branch_id }}';
+
             document.querySelectorAll('.decrease-qty').forEach(button => {
                 button.addEventListener('click', function() {
                     const index = this.getAttribute('data-index');
@@ -133,7 +136,8 @@
                             if (data.success) {
                                 document.querySelector(`div[data-index='${index}']`).remove();
                                 if (document.querySelectorAll('.w-100.mb-3').length === 0) {
-                                    window.location = '{{ route('order.menu') }}';
+                                    window.location =
+                                        `{{ route('order.menu', ['branch_id' => $branch_id]) }}`;
                                 }
                             }
                         });
@@ -161,10 +165,9 @@
                 });
             });
 
-
             document.getElementById('backButton').addEventListener('click', function() {
                 saveOrderDetails().then(() => {
-                    window.location = '{{ route('order.menu') }}';
+                    window.location = `{{ route('order.menu', ['branch_id' => $branch_id]) }}`;
                 }).catch(error => {
                     console.error('Error saving order details:', error);
                 });
@@ -212,7 +215,6 @@
                     throw error;
                 });
             }
-
 
             function updateCart() {
                 const form = document.getElementById('checkout-form');

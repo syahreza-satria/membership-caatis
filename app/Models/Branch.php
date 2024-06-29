@@ -17,5 +17,10 @@ class Branch extends Model
     {
         return $this->hasMany(Order::class);
     }
+
+    public function rewards()
+    {
+        return $this->hasMany(Reward::class);
+    }
 }
 

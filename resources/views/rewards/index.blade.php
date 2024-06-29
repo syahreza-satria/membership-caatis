@@ -17,7 +17,6 @@
             </div>
         </div>
     </section>
-
     {{-- Member Card End --}}
 
     {{-- Cards Start --}}
@@ -25,28 +24,33 @@
         <div class="d-flex flex-wrap justify-content-between">
             @unless (count($rewards) == 0)
                 @foreach ($rewards as $reward)
-                    @php
-                        $redeemed = auth()
-                            ->user()
-                            ->rewards->contains($reward->id);
-                    @endphp
-                    <div class="card-items {{ $redeemed ? 'disabled' : '' }}">
-                        @if (!$redeemed)
-                            <a href="/rewards/{{ $reward->id }}" class="text-decoration-none text-dark">
-                        @endif
-                        <img class="w-100 h-auto {{ $redeemed ? 'grayscale' : '' }}"
-                            src="{{ asset('storage/' . $reward->image_path) }}" alt="{{ $reward->title }}" />
-                        <div class="card-container">
-                            {{-- <span class="color-primary font-10 fw-bold ">{{ $reward->tags }}</span> --}}
-                            <h4 class="mt-2 font-14 fw-normal"><b>{{ $reward->title }}</b></h4>
-                            <h3 class="color-primary mt-1 fw-bold font-10">{{ $reward->product_points }} Poin</h3>
+                    @if ($reward->is_active)
+                        @php
+                            $redeemed = auth()
+                                ->user()
+                                ->rewards->contains($reward->id);
+                            $imagePath = $reward->image_path
+                                ? asset('storage/' . $reward->image_path)
+                                : asset($reward->branch->logo);
+                        @endphp
+                        <div class="card-items {{ $redeemed ? 'disabled' : '' }}">
+                            @if (!$redeemed)
+                                <a href="/rewards/{{ $reward->id }}" class="text-decoration-none text-dark">
+                            @endif
+                            <img class="w-100 h-auto {{ $redeemed ? 'grayscale' : '' }}" src="{{ $imagePath }}"
+                                alt="{{ $reward->title }}" />
+                            <div class="card-container">
+                                <h4 class="mt-2 font-14 fw-normal mb-1"><b>{{ $reward->title }}</b></h4>
+                                <p class="font-12 fw-semibold">{{ $reward->branch->name }}</p> {{-- Menampilkan nama cabang --}}
+                                <h3 class="color-primary mt-1 fw-bold font-10">{{ $reward->product_points }} Poin</h3>
+                            </div>
+                            @if (!$redeemed)
+                                </a>
+                            @else
+                                <div class="font-14 text-center text-muted fw-bold mt-auto mb-1">Telah Ditukar</div>
+                            @endif
                         </div>
-                        @if (!$redeemed)
-                            </a>
-                        @else
-                            <div class="font-14 text-center text-muted fw-bold mt-auto mb-1">Telah Ditukar</div>
-                        @endif
-                    </div>
+                    @endif
                 @endforeach
             @else
                 <div class="text-center mt-5">

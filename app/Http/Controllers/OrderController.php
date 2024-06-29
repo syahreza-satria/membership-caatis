@@ -15,15 +15,6 @@ use Illuminate\Support\Facades\Session;
 
 class OrderController extends Controller
 {
-    private $apiUrl;
-    private $token;
-
-    public function __construct()
-    {
-        $this->apiUrl = env('API_URL');
-        $this->token = env('API_TOKEN');
-    }
-
     public function showBranch()
     {
         $branches = Branch::all();
@@ -34,53 +25,43 @@ class OrderController extends Controller
         ]);
     }
 
-    public function pembelian()
+    public function pembelian($branch_id)
     {
         $client = new Client();
         $groupedData = [];
-        $categories = $this->fetchCategories();
+        $categories = $this->fetchCategories($branch_id);
 
         try {
-            $response = $client->get($this->apiUrl . '/menu', [
-                'headers' => [
-                    'Authorization' => 'Bearer ' . $this->token,
-                ]
-            ]);
+            $branch = Branch::findOrFail($branch_id);
+            $menuItems = $this->getMenuItems($branch_id);
 
-            $data = json_decode($response->getBody(), true);
-
-            if ($data['status'] == 'Success') {
-                // Tambahkan kategori dan id ke setiap item menu
-                foreach ($data['data'] as &$menu) {
+            if (!empty($menuItems)) {
+                foreach ($menuItems as &$menu) {
                     if (isset($categories[$menu['category_id']])) {
                         $menu['category_name'] = $categories[$menu['category_id']]['category_name'];
                     } else {
                         $menu['category_name'] = 'Unknown';
                     }
 
-                    // Log id dari menu untuk pengecekan
-                    Log::info('Menu ID:', ['id' => $menu['id']]);
-
-                    $menu['id'] = $menu['id']; // Pastikan id disertakan
+                    $menu['id'] = $menu['id'];
                 }
 
-                usort($data['data'], function ($a, $b) {
+                usort($menuItems, function ($a, $b) {
                     return $a['category_id'] <=> $b['category_id'];
                 });
 
-                $groupedData = $this->groupByCategory($data['data']);
+                $groupedData = $this->groupByCategory($menuItems);
             }
         } catch (\Exception $e) {
-            // Handle error
             Log::error('Error fetching menu data', ['exception' => $e]);
         }
 
         return view('orders.menu', [
             'banner' => 'MENU',
-            'data' => $groupedData
+            'data' => $groupedData,
+            'branch_id' => $branch_id
         ]);
     }
-
 
     private function mergeOrderDetails($orderDetails)
     {
@@ -101,73 +82,95 @@ class OrderController extends Controller
 
     public function addToCart(Request $request)
     {
-        $orderDetails = json_decode($request->input('orderDetails'), true);
-        $categories = $this->fetchCategories();
+        $orderDetailsJson = $request->input('orderDetails');
+        $orderDetails = json_decode($orderDetailsJson, true);
 
-        // Ambil menu_ids dari API dan tambahkan ke setiap item order
-        $menuIds = $this->getMenuItems();
+        Log::info('Isi Request:', ['request' => $request->all()]);
 
-        foreach ($orderDetails as &$item) {
-            if (isset($categories[$item['category_id']])) {
-                $item['category_name'] = $categories[$item['category_id']]['category_name'];
-            } else {
-                $item['category_name'] = 'Unknown';
+        if (is_array($orderDetails) && count($orderDetails) > 0) {
+            $branch_id = isset($orderDetails[0]['branch_id']) ? $orderDetails[0]['branch_id'] : Session::get('branch_id');
+            if (!$branch_id) {
+                Log::error('Branch ID not found in order details or session');
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Branch ID not found in order details or session'
+                ], 400);
             }
 
-            // Cari menu_id yang sesuai dengan menu_name
-            foreach ($menuIds as $menu) {
-                if ($menu['menu_name'] == $item['menu_name']) {
-                    $item['menu_id'] = $menu['id'];
-                    break;
+            Log::info('Branch Id addToCart:', ['branch_id' => $branch_id]);
+
+            Session::put('branch_id', $branch_id);
+
+            $categories = $this->fetchCategories($branch_id);
+            $menuIds = $this->getMenuItems($branch_id);
+
+            if (empty($menuIds)) {
+                Log::error('Menu IDs not found for branch: ' . $branch_id);
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Menu IDs not found for branch: ' . $branch_id
+                ], 400);
+            }
+
+            Log::info('Menu IDs found for branch: ' . $branch_id);
+
+            foreach ($orderDetails as &$item) {
+                if (isset($categories[$item['category_id']])) {
+                    $item['category_name'] = $categories[$item['category_id']]['category_name'];
+                } else {
+                    $item['category_name'] = 'Unknown';
+                }
+
+                foreach ($menuIds as $menu) {
+                    if ($menu['menu_name'] == $item['menu_name']) {
+                        $item['menu_id'] = $menu['id'];
+                        break;
+                    }
+                }
+
+                if (!isset($item['menu_id'])) {
+                    Log::error('Menu ID not found for menu: ' . $item['menu_name']);
+                    return response()->json([
+                        'success' => false,
+                        'error' => 'Menu ID not found for menu: ' . $item['menu_name']
+                    ], 400);
                 }
             }
 
-            // Pastikan menu_id sudah ada di setiap item
-            if (!isset($item['menu_id'])) {
-                // Handle jika menu_id tidak ditemukan
-                Log::error('Menu ID not found for menu: ' . $item['menu_name']);
-                return response()->json([
-                    'success' => false,
-                    'error' => 'Menu ID not found for menu: ' . $item['menu_name']
-                ], 400);
-            }
+            $orderDetails = $this->mergeOrderDetails($orderDetails);
+            Session::put('basket', $orderDetails);
+
+            Log::info('Add to Cart OrderDetails:', ['orderDetails' => $orderDetails]);
+
+            return response()->json([
+                'success' => true,
+                'redirect' => route('showCart', ['branch_id' => $branch_id])
+            ], 200);
+        } else {
+            return response()->json([
+                'success' => false,
+                'error' => 'Invalid order details'
+            ], 400);
         }
-
-        // Gabungkan item yang sama
-        $orderDetails = $this->mergeOrderDetails($orderDetails);
-
-        // Simpan ke sesi
-        Session::put('basket', $orderDetails);
-
-        Log::info('Add to Cart OrderDetails:', $orderDetails);
-
-        return response()->json([
-            'success' => true,
-            'redirect' => route('showCart')
-        ], 200);
     }
 
-
-
-    public function showCart()
+    public function showCart($branch_id)
     {
         $orderDetails = Session::get('basket', []);
-        // Debugging: Cek isi $orderDetails
-        Log::info('Show Cart OrderDetails:', $orderDetails);
+        Log::info('Show Cart OrderDetails:', ['orderDetails' => $orderDetails]);
 
         if (empty($orderDetails)) {
-            return redirect()->route('order.menu');
+            return redirect()->route('order.menu', ['branch_id' => $branch_id]);
         }
 
-        return view('orders.cart', compact('orderDetails'));
+        return view('orders.cart', compact('orderDetails', 'branch_id'));
     }
-
 
     public function updateCart(Request $request)
     {
-        Log::info('Updating cart:', $request->all());
+        Log::info('Updating cart:', ['request' => $request->all()]);
         $orderDetails = $request->input('orderDetails', []);
-        Log::info('Update Cart OrderDetails:', $orderDetails);
+        Log::info('Update Cart OrderDetails:', ['orderDetails' => $orderDetails]);
         Session::put('basket', $orderDetails);
 
         return response()->json(['success' => true, 'message' => 'Keranjang berhasil diperbarui!', 'data' => session('basket')]);
@@ -177,7 +180,7 @@ class OrderController extends Controller
     {
         $index = $request->input('index');
         $item = $request->input('item');
-        
+
         Log::info('Item removed from cart', [
             'index' => $index,
             'item' => $item
@@ -186,13 +189,11 @@ class OrderController extends Controller
         return response()->json(['success' => true]);
     }
 
-
     public function checkout(Request $request)
     {
         $orderDetails = $request->input('orderDetails');
-        Log::info('Checkout OrderDetails:', $orderDetails);
+        Log::info('Checkout OrderDetails:', ['orderDetails' => $orderDetails]);
 
-        // Gabungkan item yang sama
         $orderDetails = $this->mergeOrderDetails($orderDetails);
 
         Session::put('orderDetails', $orderDetails);
@@ -202,19 +203,25 @@ class OrderController extends Controller
 
     public function saveBasket(Request $request)
     {
-        $basket = json_decode($request->getContent(), true);
+        $data = json_decode($request->getContent(), true);
+        Log::info('Save Basket Data:', ['data' => $data]);
+
+        $basket = $data['basket'];
+        $branch_id = $data['branch_id'];
+
         Session::put('basket', $basket);
+        Session::put('branch_id', $branch_id);
+
         return response()->json(['success' => true]);
     }
-
 
     public function verifyCode()
     {
         $orderDetails = Session::get('orderDetails', []);
-        Log::info('Verify Code OrderDetails:', $orderDetails);
+        Log::info('Verify Code OrderDetails:', ['orderDetails' => $orderDetails]);
 
         if (empty($orderDetails)) {
-            return redirect()->route('showCart')->with('error', 'Keranjang Anda kosong.');
+            return redirect()->route('showCart', ['branch_id' => Session::get('branch_id')])->with('error', 'Keranjang Anda kosong.');
         }
 
         return view('orders.verify', compact('orderDetails'));
@@ -226,7 +233,7 @@ class OrderController extends Controller
         $verificationCodeInput = $request->input('verification_code');
 
         if (empty($orderDetails)) {
-            return redirect()->route('showCart')->with('error', 'Order tidak valid.');
+            return redirect()->route('showCart', ['branch_id' => Session::get('branch_id')])->with('error', 'Order tidak valid.');
         }
 
         $verificationCode = VerificationCode::where('code', $verificationCodeInput)
@@ -237,7 +244,7 @@ class OrderController extends Controller
             return redirect()->back()->with('error', 'Kode verifikasi tidak valid.');
         }
 
-        Log::info('Confirm OrderDetails:', $orderDetails);
+        Log::info('Confirm OrderDetails:', ['orderDetails' => $orderDetails]);
 
         Session::put('verification_code', $verificationCodeInput);
 
@@ -248,9 +255,10 @@ class OrderController extends Controller
     {
         $orderDetails = Session::get('orderDetails', []);
         $verificationCode = Session::get('verification_code', null);
+        $branch_id = Session::get('branch_id');
 
         if (empty($orderDetails) || !$verificationCode) {
-            return redirect()->route('showCart')->with('error', 'Order tidak valid atau kode verifikasi tidak ditemukan.');
+            return redirect()->route('showCart', ['branch_id' => $branch_id])->with('error', 'Order tidak valid atau kode verifikasi tidak ditemukan.');
         }
 
         $totalPrice = array_reduce($orderDetails, function ($total, $item) {
@@ -259,7 +267,7 @@ class OrderController extends Controller
 
         $order = Order::create([
             'user_id' => auth()->id(),
-            'branch_id' => 1, // Ganti dengan branch_id yang sesuai
+            'branch_id' => $branch_id,
             'status' => 'pending',
             'total_price' => $totalPrice,
         ]);
@@ -267,27 +275,24 @@ class OrderController extends Controller
         foreach ($orderDetails as $detail) {
             OrderDetail::create([
                 'order_id' => $order->id,
-                'menu_id' => $detail['menu_id'], // Pastikan menyertakan menu_id
+                'menu_id' => $detail['menu_id'],
                 'menu_name' => $detail['menu_name'],
                 'quantity' => $detail['quantity'],
                 'menu_price' => $detail['menu_price'],
                 'category_id' => $detail['category_id'],
-                'note' => $detail['note'] ?? null, // Menyimpan catatan
+                'note' => $detail['note'] ?? null,
             ]);
         }
 
-        // Update poin pengguna berdasarkan total harga pesanan
         $user = User::find(auth()->id());
         $pointsEarned = floor($totalPrice / 10000);
         $user->user_points += $pointsEarned;
         $user->save();
 
-        // Ambil detail pesanan yang baru saja dibuat
         $orderDetails = $order->orderDetails;
 
-        Log::info('Show Receipt OrderDetails:', $orderDetails->toArray());
+        Log::info('Show Receipt OrderDetails:', ['orderDetails' => $orderDetails->toArray()]);
 
-        // Format data seperti yang diminta
         $formattedOrderDetails = [];
         foreach ($orderDetails as $detail) {
             $formattedOrderDetails[] = [
@@ -296,35 +301,47 @@ class OrderController extends Controller
                 'menu_name' => $detail->menu_name,
                 'menu_price' => $detail->menu_price,
                 'is_available' => 1,
-                'created_at' => $detail->created_at->toIso8601String(), // Ubah format ke ISO 8601
-                'updated_at' => $detail->updated_at->toIso8601String(), // Ubah format ke ISO 8601
-                'count' => $detail->quantity, // Menggunakan 'quantity' sebagai 'count'
+                'created_at' => $detail->created_at->toIso8601String(),
+                'updated_at' => $detail->updated_at->toIso8601String(),
+                'count' => $detail->quantity,
             ];
         }
 
-        // Konversi $orderDetails ke array sebelum mengirim ke API
-        $orderDetailsArray = $orderDetails->toArray();
-
-        // Kirim pesanan ke API teman Anda
-        if ($this->sendOrderToFriendApi($formattedOrderDetails)) {
+        if ($this->sendOrderToFriendApi($formattedOrderDetails, $branch_id)) {
             Log::info('Order successfully sent to friend API');
-            // Reset session setelah berhasil mengirim pesanan
+
+            $order->status = 'success';
+            $order->save();
+
             Session::forget('orderDetails');
             Session::forget('verification_code');
         } else {
             Log::error('Failed to send order to friend API');
-            return redirect()->route('showCart')->with('error', 'Gagal mengirim pesanan ke API teman.');
+
+            $order->status = 'error';
+            $order->save();
+
+            return redirect()->route('showCart', ['branch_id' => $branch_id])->with('error', 'Gagal mengirim pesanan ke API teman.');
         }
 
         return view('orders.receipt', compact('order', 'orderDetails', 'pointsEarned', 'formattedOrderDetails'));
     }
 
-
-
-    private function sendOrderToFriendApi($formattedOrderDetails)
+    private function sendOrderToFriendApi($formattedOrderDetails, $branch_id)
     {
-        $url = 'https://dev-lakeside.matradipti.org/api/order';
-        $token = '176|ON1H2gn7fYmYJgrBC8Fc6qubWUarl0AaVZblLQAX';
+        if ($branch_id == 1) {
+            $url = 'https://cashier.matradipti.org/api/order';
+            $token = '13235|4xllLT1aFHzhp2onW9oN486qY3Tz6eyhHakwULUp';
+        } elseif ($branch_id == 2) {
+            $url = 'https://lakesidefit.matradipti.org/api/order';
+            $token = '12413|X92SaC4Rt2YsJ2mI3K5ApB58tloit2o617fkpWsz';
+        } elseif ($branch_id == 3) {
+            $url = 'https://literasicafe.matradipti.org/api/order';
+            $token = '12613|qgzkTwIxpCjxqabntDyIHjuNNGQUlxKceMmkow3j';
+        } else {
+            Log::error('Unknown branch ID: ' . $branch_id);
+            return false;
+        }
 
         $user = auth()->user();
 
@@ -334,7 +351,7 @@ class OrderController extends Controller
             $orderData = [
                 'order_name' => $user->fullname,
                 'order_items' => $formattedOrderDetails,
-                'order_payment' => 3, // Ganti dengan metode pembayaran yang sesuai
+                'order_payment' => 3,
                 'order_total' => array_reduce($formattedOrderDetails, function ($total, $item) {
                     return $total + ($item['menu_price'] * $item['count']);
                 }, 0),
@@ -342,8 +359,7 @@ class OrderController extends Controller
                 'referral_code' => null,
             ];
 
-            // Log orderData sebelum mengirim ke API
-            Log::info('Sending order to API with data:', $orderData);
+            Log::info('Sending order to API with data:', ['orderData' => $orderData]);
 
             $response = $client->post($url, [
                 'headers' => [
@@ -355,13 +371,13 @@ class OrderController extends Controller
 
             $responseData = json_decode($response->getBody(), true);
 
-            Log::info('Response data:', $responseData);
+            Log::info('Response data:', ['responseData' => $responseData]);
 
             if ($responseData && isset($responseData['status']) && $responseData['status'] == 'success') {
                 Log::info('Order sent successfully to API');
                 return true;
             } else {
-                Log::error('Failed to send order to API. Response:', $responseData);
+                Log::error('Failed to send order to API. Response:', ['responseData' => $responseData]);
                 return false;
             }
         } catch (\Exception $e) {
@@ -369,7 +385,6 @@ class OrderController extends Controller
             return false;
         }
     }
-
 
     private function groupByCategory($menus)
     {
@@ -380,28 +395,40 @@ class OrderController extends Controller
         return $grouped;
     }
 
-    private function fetchCategories()
+    private function fetchCategories($branch_id)
     {
         $client = new Client();
-        $url = "https://dev-lakeside.matradipti.org/api/category";
+        if ($branch_id == 1) {
+            $url = 'https://cashier.matradipti.org/api/category';
+            $token = '13225|X0P930aqQqd1lJhV671oCxMT7TNwnVFdx1JeEspt';
+        } elseif ($branch_id == 2) {
+            $url = 'https://lakesidefit.matradipti.org/api/category';
+            $token = '12412|chgOcN0JHfShyzi7kc9oLEsk6at9vQbrMI49gjew';
+        } elseif ($branch_id == 3) {
+            $url = 'https://literasicafe.matradipti.org/api/category';
+            $token = '12611|TYa3BCfoS1ETBIDUXUcb3dHmcKnOAOQk3sMoqPzO';
+        } else {
+            Log::error('fetchCategories Unknown branch ID: ' . $branch_id);
+            return [];
+        }
 
         try {
             $response = $client->get($url, [
                 'headers' => [
-                    'Authorization' => 'Bearer ' . $this->token,
+                    'Authorization' => 'Bearer ' . $token,
                 ]
             ]);
             $data = json_decode($response->getBody(), true);
 
             if ($data && $data['status'] == 'success' && isset($data['data'])) {
-                Log::info('Fetched Categories:', $data['data']);
+                Log::info('Fetched Categories:', ['categories' => $data['data']]);
                 $categories = [];
                 foreach ($data['data'] as $category) {
                     $categories[$category['id']] = $category;
                 }
                 return $categories;
             } else {
-                Log::error('Failed to fetch categories:', (array) $data);
+                Log::error('Failed to fetch categories:', ['data' => $data]);
                 return [];
             }
         } catch (\Exception $e) {
@@ -417,20 +444,32 @@ class OrderController extends Controller
 
         if (isset($orderDetails[$index])) {
             unset($orderDetails[$index]);
-            Session::put('basket', array_values($orderDetails)); // Reindex array
+            Session::put('basket', array_values($orderDetails));
         }
 
         return response()->json(['success' => true]);
     }
 
-    public function getMenuItems() 
+    public function getMenuItems($branch_id)
     {
-        $url = 'https://dev-lakeside.matradipti.org/api/menu'; // Ganti dengan URL API teman Anda
-        $token = '176|ON1H2gn7fYmYJgrBC8Fc6qubWUarl0AaVZblLQAX';
+        if ($branch_id == 1) {
+            $url = 'https://cashier.matradipti.org/api/menu/available';
+            $token = '13225|X0P930aqQqd1lJhV671oCxMT7TNwnVFdx1JeEspt';
+        } elseif ($branch_id == 2) {
+            $url = 'https://lakesidefit.matradipti.org/api/menu/available';
+            $token = '12412|chgOcN0JHfShyzi7kc9oLEsk6at9vQbrMI49gjew';
+        } elseif ($branch_id == 3) {
+            $url = 'https://literasicafe.matradipti.org/api/menu/available';
+            $token = '12611|TYa3BCfoS1ETBIDUXUcb3dHmcKnOAOQk3sMoqPzO';
+        } else {
+            Log::error('getMenuItems Unknown branch ID: ' . $branch_id);
+            return [];
+        }
+
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Authorization: Bearer ' . $token, // Masukkan token autentikasi di sini
+            'Authorization: Bearer ' . $token,
             'Content-Type: application/json',
         ]);
 
@@ -438,7 +477,6 @@ class OrderController extends Controller
         curl_close($ch);
 
         if ($response === false) {
-            // Handle error curl
             return [];
         }
 
@@ -447,9 +485,7 @@ class OrderController extends Controller
         if (isset($responseData['data']) && is_array($responseData['data'])) {
             return $responseData['data'];
         } else {
-            // Handle error response dari API
             return [];
         }
     }
-
 }

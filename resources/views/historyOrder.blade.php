@@ -14,7 +14,12 @@
                         <li class="w-100 list-unstyled" style="margin-bottom: 35px">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div class="d-flex align-items-center">
-                                    <img src="/img/CabangLakeside.png" alt="image" width="50" height="50"
+                                    @php
+                                        $branchLogo =
+                                            $branches->firstWhere('id', $order->branch_id)->logo ??
+                                            'img/default-logo.png';
+                                    @endphp
+                                    <img src="{{ $branchLogo }}" alt="Branch Logo" width="50" height="50"
                                         style="border-radius: 10px">
                                     <div class="ms-3">
                                         <h3 class="font-14 fw-bold mb-0">{{ $detail->menu_name }} x{{ $detail->quantity }}
@@ -26,7 +31,7 @@
                                     </div>
                                 </div>
                                 <p class="font-12 fw-bold my-auto text-end">
-                                    Rp {{ number_format($order->total_price) }}
+                                    Rp {{ number_format($order->total_price, 0, ',', '.') }}
                                     <br>
                                     @php
                                         $pointsAdded = intdiv($order->total_price, 10000);

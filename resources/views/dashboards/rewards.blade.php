@@ -24,6 +24,15 @@
                     <label for="image">Image</label>
                     <input type="file" class="form-control" id="image" name="image">
                 </div>
+                <div class="form-group">
+                    <label for="branch_id">Branch</label>
+                    <select class="form-control" id="branch_id" name="branch_id" required>
+                        <option value="">Pilih Cabang</option>
+                        @foreach ($branches as $branch)
+                            <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
                 <button type="submit" class="btn btn-primary mt-3">Add Reward</button>
             </form>
             @if ($rewards->isNotEmpty())
@@ -33,28 +42,114 @@
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <div>
                                 <h5>{{ $reward->title }}</h5>
+                                <p class="fw-semibold">Cabang: {{ $reward->branch->name }}</p>
                                 <p>{{ $reward->description }}</p>
                                 <p class="fw-semibold">{{ $reward->product_points }} points</p>
                                 @if ($reward->image_path)
                                     <img src="{{ asset('storage/' . $reward->image_path) }}" alt="{{ $reward->title }}"
-                                        width="100">
+                                        width="100" class="{{ $reward->is_active ? '' : 'grayscale' }} rounded-4">
+                                @else
+                                    <p class="fw-semibold mt-3">Tidak Memiliki Foto</p>
                                 @endif
                             </div>
                             <div class="d-flex">
-                                <a href="{{ route('dashboard.rewards.edit', $reward->id) }}"
-                                    class="btn btn-warning me-2">Edit</a>
-                                <form action="{{ route('dashboard.rewards.destroy', $reward->id) }}" method="POST"
-                                    onsubmit="return confirm('Are you sure you want to delete this reward?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-danger">Delete</button>
-                                </form>
+                                <button type="button"
+                                    class="btn me-2 toggle-status-btn {{ $reward->is_active ? 'btn-success' : 'btn-secondary' }}"
+                                    data-url="{{ route('dashboard.rewards.toggle', $reward->id) }}">
+                                    {!! $reward->is_active ? '<i class="bi bi-eye-fill"></i>' : '<i class="bi bi-eye-slash-fill"></i>' !!}
+                                </button>
+
+                                <a href="{{ route('dashboard.rewards.edit', $reward->id) }}" class="btn btn-info me-2"><i
+                                        class="bi bi-pencil-fill text-white"></i>
+                                </a>
+                                <button type="button" class="btn btn-danger delete-btn"
+                                    data-url="{{ route('dashboard.rewards.destroy', $reward->id) }}">
+                                    <i class="bi bi-trash3-fill"></i>
+                                </button>
                             </div>
                         </li>
                     @endforeach
                 </ul>
+            @else
+                <p class="mt-4">Belum ada reward yang ditambahkan.</p>
             @endif
         </div>
     </div>
 
+    <!-- Hidden form for toggling status -->
+    <form id="toggle-status-form" method="POST" style="display: none;">
+        @csrf
+    </form>
+
+    <!-- Hidden form for deleting reward -->
+    <form id="delete-form" method="POST" style="display: none;">
+        @csrf
+        @method('DELETE')
+    </form>
+@endsection
+
+@section('styles')
+    <style>
+        .grayscale {
+            filter: grayscale(100%);
+        }
+    </style>
+@endsection
+
+@section('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.toggle-status-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    var url = this.dataset.url;
+                    var isActive = this.classList.contains('btn-success');
+
+                    var title = isActive ? 'Kamu yakin menyembunyikan katalog ini?' :
+                        'Kamu yakin menampilkan katalog ini?';
+                    var text = isActive ?
+                        'Pelanggan tidak akan bisa melihat reward ini pada webnya sampai kamu mengaktifkannya lagi' :
+                        'Pelanggan akan bisa melihat reward ini pada webnya';
+                    var confirmButtonText = isActive ? 'Iya, Sembunyikan!' : 'Iya, Tampilkan!';
+
+                    Swal.fire({
+                        title: title,
+                        text: text,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: confirmButtonText
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            var form = document.getElementById('toggle-status-form');
+                            form.action = url;
+                            form.submit();
+                        }
+                    });
+                });
+            });
+
+            document.querySelectorAll('.delete-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    var url = this.dataset.url;
+                    Swal.fire({
+                        title: 'Kamu yakin menghapus katalog ini?',
+                        text: "Kamu akan menghapus reward ini dari database yang bisa mengakibatkan hilangnya history dari orang-orang yang telah menukarkan rewardnya",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Iya, Hapus saja!'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            var form = document.getElementById('delete-form');
+                            form.action = url;
+                            form.submit();
+                        }
+                    });
+                });
+            });
+        });
+    </script>
 @endsection

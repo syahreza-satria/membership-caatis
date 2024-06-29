@@ -1,4 +1,4 @@
-@extends('layouts/layout-main')
+@extends('layouts.layout-main')
 
 @section('content')
     <section class="history">
@@ -9,8 +9,8 @@
                 <li class="w-100 list-unstyled" style="height: 50px; margin-bottom: 35px">
                     <div class="d-flex justify-content-between align-items-center">
                         <div class="d-flex align-items-center">
-                            <img src="/img/CabangLakeside.png" alt="image" width="50" height="50"
-                                style="border-radius: 10px">
+                            <img src="{{ asset('storage/' . $item->image_path) }}" alt="{{ $item->title }}" width="50"
+                                height="50" style="border-radius: 10px">
                             <div class="ms-3 ">
                                 <h3 class="font-14 fw-bold mb-0 ">{{ $item->title }}</h3>
                                 <p class="font-10 fw-semibold text-secondary mb-0 ">

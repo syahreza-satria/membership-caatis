@@ -27,14 +27,14 @@ Route::middleware('auth')->group(function () {
 
     // HISTORY
     Route::get('/history', [HistoryController::class, 'index'])->name('history');
-    Route::get('/history/rewards', [HistoryController::class, 'rewardHistory']);
-    Route::get('/history/orders', [HistoryController::class, 'orderHistory']);
+    Route::get('/history/rewards', [HistoryController::class, 'rewardHistory'])->name('history.rewards');
+    Route::get('/history/orders', [HistoryController::class, 'orderHistory'])->name('history.orders');
 
     // ORDER
     Route::get('/branch', [OrderController::class, 'showBranch'])->name('showBranch');
-    Route::get('/order/menu', [OrderController::class, 'pembelian'])->name('order.menu');
+    Route::get('/order/menu/{branch_id}', [OrderController::class, 'pembelian'])->name('order.menu');
     Route::post('/order/add-to-cart', [OrderController::class, 'addToCart'])->name('order.addToCart');
-    Route::get('/cart', [OrderController::class, 'showCart'])->name('showCart');
+    Route::get('/cart/{branch_id}', [OrderController::class, 'showCart'])->name('showCart');
     Route::post('/update-cart', [OrderController::class, 'updateCart'])->name('updateCart');
     Route::post('/remove-item', [OrderController::class, 'removeItem'])->name('removeItem');
     Route::post('/order/checkout', [OrderController::class, 'checkout'])->name('checkout');
@@ -43,8 +43,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/order/receipt', [OrderController::class, 'showReceipt'])->name('showReceipt');
     Route::post('/order/save-basket', [OrderController::class, 'saveBasket'])->name('order.saveBasket');
     Route::post('/log-remove-item', [OrderController::class, 'logRemoveItem'])->name('logRemoveItem');
-
 });
+
  
 
 // Route::get('/order/show-code', [OrderController::class, 'showCode'])->middleware('auth');
@@ -61,13 +61,17 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post('/dashboard/rewards', [DashboardController::class, 'storeReward'])->name('dashboard.rewards.store');
     Route::get('/dashboard/rewards/{reward}/edit', [DashboardController::class, 'editReward'])->name('dashboard.rewards.edit');
     Route::put('/dashboard/rewards/{reward}', [DashboardController::class, 'updateReward'])->name('dashboard.rewards.update');
+    Route::post('/dashboard/rewards/{reward}/hide', [DashboardController::class, 'hideReward'])->name('dashboard.rewards.hide');
+    Route::post('/dashboard/rewards/{reward}/toggle', [DashboardController::class, 'toggleRewardStatus'])->name('dashboard.rewards.toggle');
     Route::delete('/dashboard/rewards/{reward}', [DashboardController::class, 'destroyReward'])->name('dashboard.rewards.destroy');
     Route::get('/dashboard/users', [DashboardController::class, 'users'])->name('dashboard.users');
+    Route::get('/dashboard/orders', [DashboardController::class, 'orders'])->name('dashboard.orders');
+    Route::get('/dashboard/orders/search', [DashboardController::class, 'searchOrders'])->name('dashboard.orders.search');
 });
+
 
 Route::get('/about', function(){
     return view('about',[
         'banner' => 'TENTANG KAMI'
     ]);
 })->middleware('auth');
-

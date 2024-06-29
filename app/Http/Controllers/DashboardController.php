@@ -4,10 +4,13 @@ namespace App\Http\Controllers;
 
 use Carbon\Carbon;
 use App\Models\User;
+use App\Models\Order;
+use App\Models\Branch;
 use App\Models\Reward;
 use Illuminate\Http\Request;
 use App\Models\VerificationCode;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 
 class DashboardController extends Controller
 {
@@ -46,8 +49,11 @@ class DashboardController extends Controller
 
     public function rewards()
     {
-        $rewards = Reward::all();
-        return view('dashboards.rewards', compact('rewards'));
+        // Mengambil rewards dan mengurutkannya dari yang terbaru sampai yang terlama
+        $rewards = Reward::orderBy('created_at', 'desc')->get();
+        $branches = Branch::all(); // Ambil semua branches
+
+        return view('dashboards.rewards', compact('rewards', 'branches'));
     }
 
     public function storeReward(Request $request)
@@ -57,12 +63,15 @@ class DashboardController extends Controller
             'product_points' => 'required|integer|min:0',
             'description' => 'required|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'branch_id' => 'required|exists:branches,id' // Validasi branch_id
         ]);
 
         $reward = new Reward;
         $reward->title = $request->title;
         $reward->product_points = $request->product_points;
         $reward->description = $request->description;
+        $reward->is_active = true;
+        $reward->branch_id = $request->branch_id; // Assign branch_id
 
         if ($request->hasFile('image')) {
             $imagePath = $request->file('image')->store('rewards', 'public');
@@ -71,30 +80,32 @@ class DashboardController extends Controller
 
         $reward->save();
 
-        return redirect()->route('dashboard.rewards')->with('success', 'Reward added successfully.');
+        $branches = Branch::all(); // Ambil semua branches
 
+        return redirect()->route('dashboard.rewards')->with('success', 'Reward added successfully.');
     }
 
-    public function destroyReward($id)
+    public function toggleRewardStatus($id)
     {
         $reward = Reward::findOrFail($id);
+        $reward->is_active = !$reward->is_active;
+        $reward->save();
 
-        // Hapus gambar dari penyimpanan
-        if ($reward->image_path) {
-            Storage::disk('public')->delete($reward->image_path);
+        if ($reward->is_active) {
+            // Reset users who redeemed this reward
+            $reward->users()->detach();
         }
 
-        $reward->delete();
-
-        return redirect()->route('dashboard.rewards')->with('success', 'Reward deleted successfully.');
+        return redirect()->route('dashboard.rewards')->with('success', 'Reward status updated successfully.');
     }
 
-    public function users()
+    public function hideReward($id)
     {
-        $users = User::all();
-        $totalUsers = $users->count();
+        $reward = Reward::findOrFail($id);
+        $reward->is_active = false;
+        $reward->save();
 
-        return view('dashboards.users', compact('users', 'totalUsers'));
+        return redirect()->route('dashboard.rewards')->with('success', 'Reward hidden successfully.');
     }
 
     public function editReward($id)
@@ -118,11 +129,9 @@ class DashboardController extends Controller
         $reward->description = $request->description;
 
         if ($request->hasFile('image')) {
-            // Delete the old image
             if ($reward->image_path) {
                 Storage::disk('public')->delete($reward->image_path);
             }
-            // Store the new image
             $imagePath = $request->file('image')->store('rewards', 'public');
             $reward->image_path = $imagePath;
         }
@@ -130,6 +139,78 @@ class DashboardController extends Controller
         $reward->save();
 
         return redirect()->route('dashboard.rewards')->with('success', 'Reward updated successfully.');
+    }
 
+    public function destroyReward($id)
+    {
+        $reward = Reward::findOrFail($id);
+        
+        // Hapus gambar dari penyimpanan jika ada
+        if ($reward->image_path) {
+            Storage::disk('public')->delete($reward->image_path);
+        }
+        
+        $reward->delete();
+
+        return redirect()->route('dashboard.rewards')->with('success', 'Reward deleted successfully.');
+    }
+
+    public function users()
+    {
+        $users = User::all();
+        $totalUsers = $users->count();
+
+        return view('dashboards.users', compact('users', 'totalUsers'));
+    }
+
+    public function orders(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'search' => 'nullable|string|max:255',
+            'branch_id' => 'nullable|integer|exists:branches,id'
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->route('dashboard.orders')
+                            ->withErrors($validator)
+                            ->withInput();
+        }
+
+        $search = $request->input('search');
+        $branch_id = $request->input('branch_id');
+        
+        $orders = Order::with('user', 'orderDetails', 'branch')
+                        ->when($search, function ($query, $search) {
+                            return $query->whereHas('user', function ($query) use ($search) {
+                                $query->where('fullname', 'like', "%{$search}%");
+                            });
+                        })
+                        ->when($branch_id, function ($query, $branch_id) {
+                            return $query->where('branch_id', $branch_id);
+                        })
+                        ->orderBy('created_at', 'desc')
+                        ->get();
+        
+        $branches = Branch::all(); // Ambil semua branches
+
+        return view('dashboards.orders', compact('orders', 'search', 'branches', 'branch_id'));
+    }
+
+    public function searchOrders(Request $request)
+    {
+        $query = $request->input('query');
+        $branch_id = $request->input('branch_id');
+
+        $orders = Order::with('user', 'orderDetails', 'branch')
+            ->whereHas('user', function ($q) use ($query) {
+                $q->where('fullname', 'like', '%' . $query . '%');
+            })
+            ->when($branch_id, function ($q) use ($branch_id) {
+                $q->where('branch_id', $branch_id);
+            })
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json($orders);
     }
 }
