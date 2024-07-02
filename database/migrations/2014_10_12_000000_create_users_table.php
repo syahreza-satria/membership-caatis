@@ -14,7 +14,7 @@ class CreateUsersTable extends Migration
             $table->string('email')->unique();
             $table->string('password');
             $table->string('phone');
-            $table->integer('user_points')->default(700);
+            $table->integer('user_points')->default(100);
             $table->boolean('is_admin')->default(false);
             $table->rememberToken();
             $table->timestamps();

@@ -24,11 +24,11 @@
                         <a href="/history" class="text-decoration-none font-black">Riwayat</a>
                     </button>
                 </li>
-                <li>
+                {{-- <li>
                     <button class="dropdown-item" type="button">
                         <a href="/about" class="text-decoration-none font-black">Tentang Kami</a>
                     </button>
-                </li>
+                </li> --}}
                 <li>
                     <form method="POST" action="/logout">
                         @csrf

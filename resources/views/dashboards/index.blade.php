@@ -5,11 +5,47 @@
         <h2>Dashboard</h2>
         <hr>
         <h3>Total Users: {{ $totalUsers }}</h3>
-        <div class="mt-4">
-            <a href="{{ route('dashboard.verification-codes') }}" class="mt-2 btn btn-primary">View Verification Codes</a>
-            <a href="{{ route('dashboard.rewards') }}" class="mt-2 btn btn-primary">Kelola Rewards</a>
-            <a href="{{ route('dashboard.users') }}" class="mt-2 btn btn-primary">View Users</a>
-            <a href="{{ route('dashboard.orders') }}" class="mt-2 btn btn-primary">View Orders</a>
+        <div class="row mt-4">
+            <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-3">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <i class="fas fa-key fa-2x mb-3"></i>
+                        <h5 class="card-title">Verification Codes</h5>
+                        <p class="card-text">View Verification Codes</p>
+                        <a href="{{ route('dashboard.verification-codes') }}" class="btn btn-primary">Go</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-3">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <i class="fas fa-gift fa-2x mb-3"></i>
+                        <h5 class="card-title">Kelola Rewards</h5>
+                        <p class="card-text">Manage Rewards</p>
+                        <a href="{{ route('dashboard.rewards') }}" class="btn btn-primary">Go</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-3">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <i class="fas fa-users fa-2x mb-3"></i>
+                        <h5 class="card-title">Users</h5>
+                        <p class="card-text">View Users</p>
+                        <a href="{{ route('dashboard.users') }}" class="btn btn-primary">Go</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-3">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <i class="fas fa-receipt fa-2x mb-3"></i>
+                        <h5 class="card-title">Orders</h5>
+                        <p class="card-text">View Orders</p>
+                        <a href="{{ route('dashboard.orders') }}" class="btn btn-primary">Go</a>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 @endsection

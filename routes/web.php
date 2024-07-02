@@ -70,8 +70,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
 });
 
 
-Route::get('/about', function(){
-    return view('about',[
-        'banner' => 'TENTANG KAMI'
-    ]);
-})->middleware('auth');
+// Route::get('/about', function(){
+//     return view('about',[
+//         'banner' => 'TENTANG KAMI'
+//     ]);
+// })->middleware('auth');
