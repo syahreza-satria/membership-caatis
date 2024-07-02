@@ -6,7 +6,6 @@
         @forelse($data as $categoryId => $menus)
             <h2 class="font-20 fw-bold mb-2 text-uppercase">{{ $menus[0]['category_name'] }}</h2>
             <div class="mb-3" style="border-top: 1px dashed #d5d5d5"></div>
-
             @foreach ($menus as $menu)
                 <div class="w-100 mb-3">
                     <div class="mb-1 d-flex justify-content-between">
@@ -14,7 +13,7 @@
                             <h3 class="font-14 mb-0 fw-semibold">{{ $menu['menu_name'] }}</h3>
                             <p class="font-12 fw-semibold mt-3">Rp {{ number_format($menu['menu_price'], 0, ',', '.') }}</p>
                         </div>
-                        <img src="/img/CabangLakeside.png" class="rounded-3" alt="Menu" width="60" height="60">
+                        <img src="{{ $menu['branch_logo'] }}" class="rounded-3" alt="Menu" width="60" height="60">
                     </div>
                     <div class="text-end">
                         <div class="order-controls" data-name="{{ $menu['menu_name'] }}"
@@ -48,6 +47,10 @@
                     <textarea class="form-control" id="orderNote" rows="3"></textarea>
                 </div>
             </div>
+            <div class="d-flex justify-content-end me-4">
+                <h5 class="fw-semibold">Total:</h5>
+                <h5 class="fw-semibold" id="drawer-total-price">Rp 0</h5>
+            </div>
             <div class="drawer-footer d-flex justify-content-between align-items-center">
                 <div class="d-flex flex-column">
                     <div class="qty-controls d-flex align-items-center mb-2">
@@ -55,10 +58,6 @@
                         <input type="number" class="form-control form-control-sm text-center" id="qtyInput" value="1"
                             style="width: 50px;" readonly>
                         <button class="btn btn-outline-secondary btn-sm ms-2" id="increaseQty">+</button>
-                    </div>
-                    <div class="d-flex justify-content-between">
-                        <h5 class="fw-semibold">Total:</h5>
-                        <h5 class="fw-semibold" id="drawer-total-price">Rp 0</h5>
                     </div>
                 </div>
                 <input type="hidden" id="branchId" value="{{ $branch_id }}">

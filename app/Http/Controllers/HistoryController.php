@@ -26,7 +26,8 @@ class HistoryController extends Controller
             "rewards.product_points",
             "rewards.image_path", // Add image_path to select
             "rewards_history_log_type.name as annotation",
-            "rewards_history_log.created_at as redeemed_at"
+            "rewards_history_log.created_at as redeemed_at",
+            "rewards.branch_id"
         )
         ->leftJoin("users", "users.id", "=", "rewards_history_log.user_id")
         ->leftJoin("rewards", "rewards.id", "=", "rewards_history_log.rewards_id")
@@ -35,12 +36,14 @@ class HistoryController extends Controller
         ->orderByDesc("rewards_history_log.created_at")
         ->get();
 
+        $branches = Branch::all();
+
         return view('historyReward', [
             'history' => $data,
-            'banner' => "RIWAYAT"
+            'banner' => "RIWAYAT",
+            'branches' => $branches
         ]);
     }
-
 
     public function orderHistory(Request $request)
     {
@@ -54,7 +57,7 @@ class HistoryController extends Controller
         return view('historyOrder', [
             'orders' => $orders,
             'branches' => $branches,
-            'banner' => "RIWAYAT PEMESANAN"
+            'banner' => "RIWAYAT"
         ]);
     }
 }

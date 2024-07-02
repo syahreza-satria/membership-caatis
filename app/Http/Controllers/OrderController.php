@@ -30,10 +30,18 @@ class OrderController extends Controller
         $client = new Client();
         $groupedData = [];
         $categories = $this->fetchCategories($branch_id);
+        $branchLogo = '';
 
         try {
             $branch = Branch::findOrFail($branch_id);
             $menuItems = $this->getMenuItems($branch_id);
+
+            // Set the branch logo based on the branch ID
+            if ($branch->logo) {
+                $branchLogo = $branch->logo;
+            } else {
+                $branchLogo = '/img/default_logo.png'; // Default logo if none found
+            }
 
             if (!empty($menuItems)) {
                 foreach ($menuItems as &$menu) {
@@ -43,6 +51,7 @@ class OrderController extends Controller
                         $menu['category_name'] = 'Unknown';
                     }
 
+                    $menu['branch_logo'] = $branchLogo;
                     $menu['id'] = $menu['id'];
                 }
 
@@ -59,7 +68,8 @@ class OrderController extends Controller
         return view('orders.menu', [
             'banner' => 'MENU',
             'data' => $groupedData,
-            'branch_id' => $branch_id
+            'branch_id' => $branch_id,
+            'branch_logo' => $branchLogo
         ]);
     }
 
@@ -161,6 +171,17 @@ class OrderController extends Controller
 
         if (empty($orderDetails)) {
             return redirect()->route('order.menu', ['branch_id' => $branch_id]);
+        }
+
+        try {
+            $branch = Branch::findOrFail($branch_id);
+            $branchLogo = $branch->logo ?? '/img/default_logo.png'; // Default logo if none found
+
+            foreach ($orderDetails as &$item) {
+                $item['branch_logo'] = $branchLogo;
+            }
+        } catch (\Exception $e) {
+            Log::error('Error fetching branch data', ['exception' => $e]);
         }
 
         return view('orders.cart', compact('orderDetails', 'branch_id'));

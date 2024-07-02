@@ -22,7 +22,8 @@
                             <p class="font-12 fw-semibold mt-3">Rp {{ number_format($item['menu_price'], 0, ',', '.') }}</p>
                             <p class="font-12 mt-1">{{ $item['category_name'] }}</p>
                         </div>
-                        <img src="/img/CabangLakeside.png" class="rounded-3" alt="Menu" width="60" height="60">
+                        <img src="{{ $item['branch_logo'] }}" class="rounded-3" alt="Menu" width="60"
+                            height="60">
                     </div>
                     <div class="mb-3">
                         <label for="note-{{ $index }}" class="form-label">Catatan</label>
@@ -62,7 +63,7 @@
                 </div>
             @endforelse
             @if (count($orderDetails) > 0)
-                <div class="d-flex justify-content-end mt-3">
+                <div class="d-flex justify-content-end my-3">
                     <button type="button" class="btn btn-success" id="checkoutButton">Checkout</button>
                 </div>
             @endif

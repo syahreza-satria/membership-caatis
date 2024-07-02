@@ -6,21 +6,27 @@
     @endphp
 
     <section class="reward-detail">
-        <img src="{{ $imagePath }}" alt="{{ $reward->title }}" width="350px" class="rounded-4 ">
-        <h2 class="fw-bold font-20 pt-3 ">{{ $reward->title }}</h2>
-        <h2 class="fw-semibold font-16 pb-2">Cabang: {{ $reward->branch->name }}</h2>
-        <div class="poin-detail text-center rounded-5 mb-4">
-            <p class="fw-semibold font-14 my-2 mx-auto">{{ $reward->product_points }} Poin</p>
+        <img src="{{ $imagePath }}" alt="{{ $reward->title }}" width="350px" class="rounded-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="fw-bold font-20 pt-3">{{ $reward->title }}</h2>
+                <h2 class="fw-semibold font-16 pb-2">Cabang: {{ $reward->branch->name }}</h2>
+            </div>
+            <div class="poin-detail text-center rounded-5 mb-4">
+                <p class="fw-semibold font-14 my-2 mx-auto">{{ $reward->product_points }} Poin</p>
+            </div>
         </div>
         <p class="font-14 w-100 text-secondary mt-0">Deskripsi:</p>
-        <p class="font-14 w-100 ">{{ $reward->description }}</p>
+        <p class="font-14 w-100">{{ $reward->description }}</p>
 
         <form action="/rewards/redeem/{{ $reward->id }}" method="POST">
             @csrf
-            <button id="tukar-point" type="submit"
-                class="w-100 button-tukar mt-5 mb-3 border-0 text-light fw-bold ">Tukarkan Poin</button>
+            <button id="tukar-point" type="submit" class="w-100 button-tukar mt-5 mb-3 border-0 text-light fw-bold">
+                Tukarkan Poin
+            </button>
         </form>
     </section>
+
 
     @if (@session('error'))
         <script>
