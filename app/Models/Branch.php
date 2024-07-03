@@ -10,7 +10,7 @@ class Branch extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name', 'address', 'logo'
+        'name', 'address', 'logo', 'api_url', 'api_token'
     ];
 
     public function orders()

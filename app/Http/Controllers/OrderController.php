@@ -12,6 +12,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use App\Models\VerificationCode;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Storage;
 
 class OrderController extends Controller
 {
@@ -38,7 +39,7 @@ class OrderController extends Controller
 
             // Set the branch logo based on the branch ID
             if ($branch->logo) {
-                $branchLogo = $branch->logo;
+                $branchLogo = Storage::url($branch->logo);
             } else {
                 $branchLogo = '/img/default_logo.png'; // Default logo if none found
             }
@@ -175,7 +176,7 @@ class OrderController extends Controller
 
         try {
             $branch = Branch::findOrFail($branch_id);
-            $branchLogo = $branch->logo ?? '/img/default_logo.png'; // Default logo if none found
+            $branchLogo = $branch->logo ? Storage::url($branch->logo) : '/img/default_logo.png'; // Default logo if none found
 
             foreach ($orderDetails as &$item) {
                 $item['branch_logo'] = $branchLogo;
@@ -186,6 +187,7 @@ class OrderController extends Controller
 
         return view('orders.cart', compact('orderDetails', 'branch_id'));
     }
+
 
     public function updateCart(Request $request)
     {
@@ -350,23 +352,18 @@ class OrderController extends Controller
 
     private function sendOrderToFriendApi($formattedOrderDetails, $branch_id)
     {
-        if ($branch_id == 1) {
-            $url = 'https://cashier.matradipti.org/api/order';
-            $token = '13235|4xllLT1aFHzhp2onW9oN486qY3Tz6eyhHakwULUp';
-        } elseif ($branch_id == 2) {
-            $url = 'https://lakesidefit.matradipti.org/api/order';
-            $token = '12413|X92SaC4Rt2YsJ2mI3K5ApB58tloit2o617fkpWsz';
-        } elseif ($branch_id == 3) {
-            $url = 'https://literasicafe.matradipti.org/api/order';
-            $token = '12613|qgzkTwIxpCjxqabntDyIHjuNNGQUlxKceMmkow3j';
-        } else {
-            Log::error('Unknown branch ID: ' . $branch_id);
+        $branch = Branch::find($branch_id);
+
+        if (!$branch || !$branch->api_url || !$branch->api_token) {
+            Log::error('Unknown branch ID or missing API details for branch ID: ' . $branch_id);
             return false;
         }
 
-        $user = auth()->user();
+        $url = rtrim($branch->api_url, '/') . '/order';
+        $token = $branch->api_token;
 
-        $client = new Client();
+        $user = auth()->user();
+        $client = new \GuzzleHttp\Client();
 
         try {
             $orderData = [
@@ -406,6 +403,7 @@ class OrderController extends Controller
             return false;
         }
     }
+
 
     private function groupByCategory($menus)
     {
@@ -473,39 +471,36 @@ class OrderController extends Controller
 
     public function getMenuItems($branch_id)
     {
-        if ($branch_id == 1) {
-            $url = 'https://cashier.matradipti.org/api/menu/available';
-            $token = '13225|X0P930aqQqd1lJhV671oCxMT7TNwnVFdx1JeEspt';
-        } elseif ($branch_id == 2) {
-            $url = 'https://lakesidefit.matradipti.org/api/menu/available';
-            $token = '12412|chgOcN0JHfShyzi7kc9oLEsk6at9vQbrMI49gjew';
-        } elseif ($branch_id == 3) {
-            $url = 'https://literasicafe.matradipti.org/api/menu/available';
-            $token = '12611|TYa3BCfoS1ETBIDUXUcb3dHmcKnOAOQk3sMoqPzO';
-        } else {
-            Log::error('getMenuItems Unknown branch ID: ' . $branch_id);
+        $client = new \GuzzleHttp\Client();
+
+        // Ambil URL dan token dari tabel Branch
+        $branch = Branch::find($branch_id);
+
+        if (!$branch || !$branch->api_url || !$branch->api_token) {
+            Log::error('getMenuItems: Invalid branch ID or missing API details for branch ID: ' . $branch_id);
             return [];
         }
 
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Authorization: Bearer ' . $token,
-            'Content-Type: application/json',
-        ]);
+        $url = rtrim($branch->api_url, '/') . '/menu/available';
+        $token = $branch->api_token;
 
-        $response = curl_exec($ch);
-        curl_close($ch);
+        try {
+            $response = $client->request('GET', $url, [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $token,
+                    'Content-Type' => 'application/json',
+                ],
+            ]);
 
-        if ($response === false) {
-            return [];
-        }
+            $responseData = json_decode($response->getBody(), true);
 
-        $responseData = json_decode($response, true);
-
-        if (isset($responseData['data']) && is_array($responseData['data'])) {
-            return $responseData['data'];
-        } else {
+            if (isset($responseData['data']) && is_array($responseData['data'])) {
+                return $responseData['data'];
+            } else {
+                return [];
+            }
+        } catch (\Exception $e) {
+            Log::error('Error fetching menu data for branch ID ' . $branch_id . ': ' . $e->getMessage());
             return [];
         }
     }

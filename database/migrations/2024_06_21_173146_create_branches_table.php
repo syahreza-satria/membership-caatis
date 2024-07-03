@@ -13,6 +13,8 @@ class CreateBranchesTable extends Migration
             $table->string('name');
             $table->string('address')->nullable();
             $table->string('logo')->nullable();
+            $table->string('api_url')->nullable();
+            $table->string('api_token')->nullable();
             $table->timestamps();
         });
     }

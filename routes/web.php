@@ -67,6 +67,14 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/dashboard/users', [DashboardController::class, 'users'])->name('dashboard.users');
     Route::get('/dashboard/orders', [DashboardController::class, 'orders'])->name('dashboard.orders');
     Route::get('/dashboard/orders/search', [DashboardController::class, 'searchOrders'])->name('dashboard.orders.search');
+
+    // Routes for managing branches
+    Route::get('/dashboard/branches', [DashboardController::class, 'branches'])->name('dashboard.branches');
+    Route::get('/dashboard/branches/create', [DashboardController::class, 'createBranch'])->name('dashboard.branches.create');
+    Route::post('/dashboard/branches', [DashboardController::class, 'storeBranch'])->name('dashboard.branches.store');
+    Route::get('/dashboard/branches/{branch}/edit', [DashboardController::class, 'editBranch'])->name('dashboard.branches.edit');
+    Route::put('/dashboard/branches/{branch}', [DashboardController::class, 'updateBranch'])->name('dashboard.branches.update');
+    Route::delete('/dashboard/branches/{branch}', [DashboardController::class, 'destroyBranch'])->name('dashboard.branches.destroy');
 });
 
 

@@ -49,9 +49,8 @@ class DashboardController extends Controller
 
     public function rewards()
     {
-        // Mengambil rewards dan mengurutkannya dari yang terbaru sampai yang terlama
         $rewards = Reward::orderBy('created_at', 'desc')->get();
-        $branches = Branch::all(); // Ambil semua branches
+        $branches = Branch::all();
 
         return view('dashboards.rewards', compact('rewards', 'branches'));
     }
@@ -63,7 +62,7 @@ class DashboardController extends Controller
             'product_points' => 'required|integer|min:0',
             'description' => 'required|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'branch_id' => 'required|exists:branches,id' // Validasi branch_id
+            'branch_id' => 'required|exists:branches,id'
         ]);
 
         $reward = new Reward;
@@ -71,7 +70,7 @@ class DashboardController extends Controller
         $reward->product_points = $request->product_points;
         $reward->description = $request->description;
         $reward->is_active = true;
-        $reward->branch_id = $request->branch_id; // Assign branch_id
+        $reward->branch_id = $request->branch_id;
 
         if ($request->hasFile('image')) {
             $imagePath = $request->file('image')->store('rewards', 'public');
@@ -79,8 +78,6 @@ class DashboardController extends Controller
         }
 
         $reward->save();
-
-        $branches = Branch::all(); // Ambil semua branches
 
         return redirect()->route('dashboard.rewards')->with('success', 'Reward added successfully.');
     }
@@ -92,7 +89,6 @@ class DashboardController extends Controller
         $reward->save();
 
         if ($reward->is_active) {
-            // Reset users who redeemed this reward
             $reward->users()->detach();
         }
 
@@ -145,7 +141,6 @@ class DashboardController extends Controller
     {
         $reward = Reward::findOrFail($id);
         
-        // Hapus gambar dari penyimpanan jika ada
         if ($reward->image_path) {
             Storage::disk('public')->delete($reward->image_path);
         }
@@ -191,7 +186,7 @@ class DashboardController extends Controller
                         ->orderBy('created_at', 'desc')
                         ->get();
         
-        $branches = Branch::all(); // Ambil semua branches
+        $branches = Branch::all();
 
         return view('dashboards.orders', compact('orders', 'search', 'branches', 'branch_id'));
     }
@@ -212,5 +207,73 @@ class DashboardController extends Controller
             ->get();
 
         return response()->json($orders);
+    }
+
+    public function branches()
+    {
+        $branches = Branch::all();
+        return view('dashboards.branches.index', compact('branches'));
+    }
+
+    public function createBranch()
+    {
+        return view('dashboards.branches.create');
+    }
+
+    public function storeBranch(Request $request)
+    {
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'address' => 'required|string|max:255',
+            'logo' => 'nullable|image|max:2048',
+            'api_url' => 'nullable|string|max:255',
+            'api_token' => 'nullable|string|max:255',
+        ]);
+
+        if ($request->hasFile('logo')) {
+            $data['logo'] = $request->file('logo')->store('logos', 'public');
+        }
+
+        Branch::create($data);
+
+        return redirect()->route('dashboard.branches')->with('success', 'Branch created successfully.');
+    }
+
+    public function editBranch(Branch $branch)
+    {
+        return view('dashboards.branches.edit', compact('branch'));
+    }
+
+    public function updateBranch(Request $request, Branch $branch)
+    {
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'address' => 'required|string|max:255',
+            'logo' => 'nullable|image|max:2048',
+            'api_url' => 'nullable|string|max:255',
+            'api_token' => 'nullable|string|max:255',
+        ]);
+
+        if ($request->hasFile('logo')) {
+            if ($branch->logo) {
+                Storage::delete($branch->logo);
+            }
+            $data['logo'] = $request->file('logo')->store('logos', 'public');
+        }
+
+        $branch->update($data);
+
+        return redirect()->route('dashboard.branches')->with('success', 'Branch updated successfully.');
+    }
+
+    public function destroyBranch(Branch $branch)
+    {
+        if ($branch->logo) {
+            Storage::delete($branch->logo);
+        }
+
+        $branch->delete();
+
+        return redirect()->route('dashboard.branches')->with('success', 'Branch deleted successfully.');
     }
 }

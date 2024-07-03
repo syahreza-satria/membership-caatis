@@ -121,7 +121,7 @@ class UserController extends Controller
             $user->email = $profile['email'];
             $user->password = Hash::make($request->password); // Hash the password for security
             $user->phone = $profile['phone'];
-            $user->user_points = 700; // default points
+            $user->user_points = 100; // default points
 
             $user->save();
         }

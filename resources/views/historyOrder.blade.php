@@ -19,7 +19,7 @@
                                             $branches->firstWhere('id', $order->branch_id)->logo ??
                                             'img/default-logo.png';
                                     @endphp
-                                    <img src="{{ $branchLogo }}" alt="Branch Logo" width="50" height="50"
+                                    <img src="{{ Storage::url($branchLogo) }}" alt="Branch Logo" width="50" height="50"
                                         style="border-radius: 10px">
                                     <div class="ms-3">
                                         <h3 class="font-14 fw-bold mb-0">{{ $detail->menu_name }} x{{ $detail->quantity }}
