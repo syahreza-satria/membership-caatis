@@ -78,7 +78,7 @@ class UserController extends Controller
 
     public function showSsoLoginForm()
     {
-        return view('users.loginSso');
+        return view('users.loginsso');
     }
 
     public function authenticateSso(Request $request)
