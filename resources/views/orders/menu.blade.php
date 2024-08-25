@@ -37,7 +37,7 @@
         <div class="bottom-drawer d-flex flex-column" id="orderDrawer">
             <div class="drawer-header d-flex justify-content-between">
                 <h5 class="modal-title">Tambahkan ke Keranjang</h5>
-                <button type="button" class="btn-close" id="closeDrawer">&times;</button>
+                <button type="button" class="btn-close" id="closeDrawer"></button>
             </div>
             <div class="drawer-body flex-grow-1">
                 <h5 id="drawer-menu-name"></h5>

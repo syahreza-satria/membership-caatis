@@ -68,16 +68,20 @@
 
         <!-- Filter by Branch -->
         <div class="mb-4">
-            <div class="input-group">
-                <select id="branchFilter" class="form-control">
-                    <option value="">Semua Cabang</option>
-                    @foreach ($branches as $branch)
-                        <option value="{{ $branch->id }}" {{ request('branch_id') == $branch->id ? 'selected' : '' }}>
-                            {{ $branch->name }}</option>
-                    @endforeach
-                </select>
+            <div class="btn-group" role="group">
+                <a href="{{ url()->current() }}"
+                    class="btn btn-outline-primary {{ request('branch_id') == '' ? 'active' : '' }}">
+                    Semua Cabang
+                </a>
+                @foreach ($branches as $branch)
+                    <a href="{{ url()->current() }}?branch_id={{ $branch->id }}"
+                        class="btn btn-outline-primary {{ request('branch_id') == $branch->id ? 'active' : '' }}">
+                        {{ $branch->name }}
+                    </a>
+                @endforeach
             </div>
         </div>
+
 
         @if ($orders->isEmpty())
             <p>No orders found.</p>
