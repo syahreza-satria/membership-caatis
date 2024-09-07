@@ -24,14 +24,14 @@ class HistoryController extends Controller
             "users.user_points",
             "rewards.title",
             "rewards.product_points",
-            "rewards.image_path", // Add image_path to select
+            "rewards.image_path", 
             "rewards_history_log_type.name as annotation",
             "rewards_history_log.created_at as redeemed_at",
             "rewards.branch_id"
         )
         ->leftJoin("users", "users.id", "=", "rewards_history_log.user_id")
         ->leftJoin("rewards", "rewards.id", "=", "rewards_history_log.rewards_id")
-        ->leftJoin("rewards_history_log_type", "rewards_history_log_type.id", "=", "rewards_history_log.rewards_history_log_type_id") // Correct join
+        ->leftJoin("rewards_history_log_type", "rewards_history_log_type.id", "=", "rewards_history_log.rewards_history_log_type_id") 
         ->where("users.id", $request->user()->id)
         ->orderByDesc("rewards_history_log.created_at")
         ->get();

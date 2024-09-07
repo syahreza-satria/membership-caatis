@@ -11,12 +11,12 @@ use Illuminate\Support\Facades\Http;
 
 class UserController extends Controller
 {
-    // Show Register Form
+    // Memperlihatkan Form Registrasi
     public function create(){
         return view('users.register');
     }
 
-    // Create New User
+    // Membuat User baru
     public function store(Request $request){
         $formFields = $request->validate([
             'fullname' => ['required', 'min:3'],
@@ -28,7 +28,7 @@ class UserController extends Controller
         // Hash Password
         $formFields['password'] = bcrypt($formFields['password']);
 
-        // Create User
+        // Membuat User
         $user = User::create($formFields);
 
         // Login
@@ -47,7 +47,7 @@ class UserController extends Controller
         return redirect('/login')->with('message', 'You Have Been logout');
     }
 
-    // Show Login Form
+    // Memperlihatkan Login Form
     public function login(){
         return view('users.login');
     }
@@ -61,12 +61,12 @@ class UserController extends Controller
             'password' => 'required',
         ]);
         
-        // Custom credentials using 'phone' instead of 'email'
+        // Kredensial menggunakan No HP
         $credentials = [
             'phone' => $request->input('phone'),
             'password' => $request->input('password'),
         ];
-        // dd($credentials);
+
         if (auth()->attempt($credentials)) {
             $request->session()->regenerate();
 
@@ -83,13 +83,13 @@ class UserController extends Controller
 
     public function authenticateSso(Request $request)
     {
-        // Validate the incoming request
+        // Validasi Request yang datang
         $request->validate([
             'username' => 'required|string',
             'password' => 'required|string',
         ]);
 
-        // Authenticate with the external API
+        // Authenticate dengan API TelU
         $response = Http::post('https://api-gateway.telkomuniversity.ac.id/issueauth', [
             'username' => $request->username,
             'password' => $request->password,
@@ -99,10 +99,10 @@ class UserController extends Controller
             return back()->withErrors(['username' => 'Login failed. Please check your credentials and try again.']);
         }
 
-        // Extract the token from the response
+        // Ekstrak token dari respons
         $token = $response->json()['token'];
 
-        // Get the user profile from the external API using the token
+        // Dapatkan profil pengguna dari API TelU menggunakan Token
         $profileResponse = Http::withToken($token)->get('https://api-gateway.telkomuniversity.ac.id/issueprofile');
 
         if ($profileResponse->failed()) {
@@ -111,11 +111,11 @@ class UserController extends Controller
 
         $profile = $profileResponse->json();
 
-        // Check if the user already exists
-        $user = User::where('email', $profile['email'])->first();
+        // Periksa apakah pengguna double dengan no HP
+        $user = User::where('phone', $profile['phone'])->first();
 
         if (!$user) {
-            // Create a new user if it doesn't exist
+            // Buat pengguna baru jika belum ada
             $user = new User();
             $user->fullname = $profile['fullname'];
             $user->email = $profile['email'];
@@ -126,7 +126,7 @@ class UserController extends Controller
             $user->save();
         }
 
-        // Log the user in
+        // User Login
         Auth::login($user);
 
         return redirect()->intended('/');

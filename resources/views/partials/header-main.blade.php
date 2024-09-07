@@ -10,34 +10,25 @@
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
                 <li>
-                    <button class="dropdown-item" type="button">
-                        <a href="/" class="text-decoration-none font-black">Beranda</a>
-                    </button>
+                    <a href="/" class="dropdown-item text-decoration-none font-black">Beranda</a>
                 </li>
                 <li>
-                    <button class="dropdown-item" type="button">
-                        <a href="/branch" class="text-decoration-none font-black">Pembelian</a>
-                    </button>
+                    <a href="/branch" class="dropdown-item text-decoration-none font-black">Pembelian</a>
                 </li>
                 <li>
-                    <button class="dropdown-item" type="button">
-                        <a href="/history" class="text-decoration-none font-black">Riwayat</a>
-                    </button>
+                    <a href="/history" class="dropdown-item text-decoration-none font-black">Riwayat</a>
                 </li>
                 {{-- <li>
-                    <button class="dropdown-item" type="button">
-                        <a href="/about" class="text-decoration-none font-black">Tentang Kami</a>
-                    </button>
-                </li> --}}
+        <a href="/about" class="dropdown-item text-decoration-none font-black">Tentang Kami</a>
+    </li> --}}
                 <li>
                     <form method="POST" action="/logout">
                         @csrf
-                        <button type="submit" class="dropdown-item">
-                            Keluar
-                        </button>
+                        <button type="submit" class="dropdown-item">Keluar</button>
                     </form>
                 </li>
             </ul>
+
         </div>
     </div>
 </nav>

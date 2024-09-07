@@ -37,11 +37,11 @@ class OrderController extends Controller
             $branch = Branch::findOrFail($branch_id);
             $menuItems = $this->getMenuItems($branch_id);
 
-            // Set the branch logo based on the branch ID
+            
             if ($branch->logo) {
                 $branchLogo = Storage::url($branch->logo);
             } else {
-                $branchLogo = '/img/default_logo.png'; // Default logo if none found
+                $branchLogo = '/img/default_logo.png'; 
             }
 
             if (!empty($menuItems)) {
