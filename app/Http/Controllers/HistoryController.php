@@ -47,12 +47,12 @@ class HistoryController extends Controller
 
     public function orderHistory(Request $request)
     {
-        $orders = Order::with('orderDetails', 'branch')
+        $orders = Order::with(['orderDetails', 'branch:id,logo'])
             ->where('user_id', $request->user()->id)
             ->orderBy('created_at', 'desc')
             ->get();
 
-        $branches = Branch::all();
+        $branches = Branch::select('id', 'logo')->get(); // Optimize query by selecting necessary columns
 
         return view('historyOrder', [
             'orders' => $orders,
@@ -60,4 +60,5 @@ class HistoryController extends Controller
             'banner' => "RIWAYAT"
         ]);
     }
+
 }

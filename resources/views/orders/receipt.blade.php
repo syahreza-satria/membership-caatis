@@ -15,9 +15,11 @@
             <h3 class="font-16 fw-bold mb-3">Informasi Pesanan</h3>
             <p class="mb-1"><strong>Order ID:</strong> {{ $order->id }}</p>
             <p class="mb-1"><strong>Tanggal:</strong> {{ $order->created_at->format('d M Y H:i') }}</p>
-            <p class="mb-1"><strong>Total Harga:</strong> <span class="text-success">Rp
+            <p class="mb-1"><strong>Total Harga:</strong> <span class="text-success fw-semibold">Rp
                     {{ number_format($order->total_price, 0, ',', '.') }}</span></p>
-            <p class="mb-1"><strong>Poin Diperoleh:</strong> <span class="badge bg-success">{{ $pointsEarned }}</span></p>
+            <p class="mb-1"><strong>Poin Diperoleh:</strong> <span class="badge bg-success">+{{ $pointsEarned }}
+                    poin</span>
+            </p>
         </div>
 
         <!-- Detail Pesanan -->

@@ -383,7 +383,7 @@ class OrderController extends Controller
             return redirect()->route('showCart', ['outletId' => $outletId])->with('error', 'Order tidak valid atau kode verifikasi tidak ditemukan.');
         }
 
-        // Cari branch berdasarkan outletId, bukan berdasarkan id
+        // Cari branch berdasarkan outletId
         $branch = Branch::where('outletId', $outletId)->first();
 
         if (!$branch) {
@@ -396,36 +396,46 @@ class OrderController extends Controller
             return $total + ($item['menu_price'] * $item['quantity']);
         }, 0);
 
-        // Simpan order ke database dengan menggunakan id branch yang ditemukan dari outletId
+        // Simpan order ke database
         $order = Order::create([
             'user_id' => auth()->id(),
-            'branch_id' => $branch->outletId, // Gunakan branch_id dari branch yang ditemukan
+            'branch_id' => $branch->outletId,
             'status' => 'pending',
             'total_price' => $totalPrice,
         ]);
 
-        // Siapkan order details sesuai format yang dibutuhkan
+        // Simpan setiap detail pesanan ke database
+        foreach ($orderDetails as $detail) {
+            OrderDetail::create([
+                'order_id' => $order->id, // Menghubungkan dengan order yang baru saja dibuat
+                'menu_id' => $detail['menu_id'],
+                'menu_name' => $detail['menu_name'],
+                'quantity' => $detail['quantity'],
+                'menu_price' => $detail['menu_price'],
+                'category_id' => $detail['category_id'], // Pastikan ini ada di orderDetails
+                'note' => $detail['note'] ?? '',
+            ]);
+        }
+
+        // Siapkan data untuk dikirim ke API
         $formattedOrderDetails = [];
         foreach ($orderDetails as $detail) {
-
             $variant_Id = $this->fetchVariant($branch->outletId, $detail['menu_id']);
-
             $formattedOrderDetails[] = [
-                'product_id' => $detail['menu_id'], // Sesuaikan dengan id produk dari API teman
-                'variant_id' => $variant_Id, // Pastikan variant_id ada
-                'modifier_option_ids' => [], // Bisa dikosongkan jika tidak ada
+                'product_id' => $detail['menu_id'],
+                'variant_id' => $variant_Id,
+                'modifier_option_ids' => [],
                 'qty' => $detail['quantity'],
                 'notes' => $detail['note'] ?? '',
             ];
         }
 
-        // Struktur JSON sesuai permintaan
         $orderData = [
-            'customer_name' => auth()->user()->fullname, // Nama user yang sedang login
-            'phone_number' => auth()->user()->phone, // Nomor telepon user
-            'identity' => '-', // Sesuaikan jika ada field identity
-            'outlet_id' => $branch->outletId, // outletId dari tabel branch
-            'order_payment' => 3, // Sesuaikan jenis pembayaran
+            'customer_name' => auth()->user()->fullname,
+            'phone_number' => auth()->user()->phone,
+            'identity' => '-',
+            'outlet_id' => $branch->outletId,
+            'order_payment' => 3,
             'order_totals' => $totalPrice,
             'order_details' => $formattedOrderDetails,
         ];
@@ -433,13 +443,15 @@ class OrderController extends Controller
         // Kirim data ke API teman
         $this->sendOrderToFriendApi($orderData, $branch->api_url, $branch->api_token);
 
+        // Update poin user
         $user = User::find(auth()->id());
-        $pointsEarned = floor($totalPrice / 10000); // Perhitungan poin dari total pembelian
+        $pointsEarned = floor($totalPrice / 10000);
         $user->user_points += $pointsEarned;
         $user->save();
 
         return view('orders.receipt', compact('order', 'orderDetails', 'pointsEarned', 'orderData'));
     }
+
 
     private function fetchVariant($outletId, $menuId)
     {
