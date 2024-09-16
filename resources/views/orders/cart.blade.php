@@ -2,14 +2,15 @@
 
 @section('main')
     <main class="mx-auto justify-content-center main-content main h-100">
-        <div class="d-flex justify-content-start align-items-center mb-3 gap-2">
-            <button type="button" id="backButton" class="btn">
-                <i class="bi bi-arrow-left-circle-fill"></i>
+        <div class="d-flex justify-content-start align-items-center mb-3 gap-2" style="height: 30px;">
+            <button type="button" id="backButton" class="btn" style="line-height: 0;">
+                <i class="bi bi-arrow-left-circle-fill" style="font-size: 1.5rem; color: #14B8A6;"></i>
             </button>
-            <h2 class="font-20 fw-bold text-uppercase">Keranjang Belanja</h2>
+            <h2 class="font-20 fw-bold text-uppercase" style="color: #14B8A6; margin-bottom: 0;">Keranjang Belanja</h2>
         </div>
 
-        <div class="mb-3" style="border-top: 1px dashed #d5d5d5"></div>
+
+        <div class="mb-3" style="border-top: 1px dashed #d5d5d5;"></div>
 
         <form id="checkout-form" method="POST" action="{{ route('checkout') }}">
             @csrf
@@ -20,22 +21,24 @@
             <input type="hidden" name="outletId" value="{{ $outletId }}">
 
             @forelse($orderDetails as $index => $item)
-                <div class="w-100 mb-3" data-index="{{ $index }}">
-                    <div class="mb-1 d-flex justify-content-between">
+                <div class="w-100 mb-3 p-3 rounded shadow-sm bg-white" style="transition: transform 0.3s, box-shadow 0.3s;"
+                    data-index="{{ $index }}">
+                    <div class="mb-1 d-flex justify-content-between align-items-center">
                         <div>
                             <h3 class="font-14 mb-0 fw-semibold">{{ $item['menu_name'] }}</h3>
                             <p class="font-12 fw-semibold mt-3">Rp {{ number_format($item['menu_price'], 0, ',', '.') }}</p>
-                            <p class="font-12 mt-1">{{ $item['category_name'] }}</p>
+                            <p class="font-12 mt-1 text-muted">{{ $item['category_name'] }}</p>
                         </div>
                         <img src="{{ isset($item['image']) ? 'https://pos.lakesidefnb.group/storage/' . $item['image'] : asset('img/CabangLakeside.png') }}"
-                            class="rounded-3" alt="Menu" width="60" height="60">
+                            class="rounded-3" alt="Menu" width="60" height="60"
+                            style="border: 2px solid #14B8A6;">
                     </div>
                     <div class="mb-3">
                         <label for="note-{{ $index }}" class="form-label">Catatan</label>
                         <textarea class="form-control" id="note-{{ $index }}" name="orderDetails[{{ $index }}][note]"
                             rows="2">{{ $item['note'] ?? '' }}</textarea>
                     </div>
-                    <div class="d-flex">
+                    <div class="d-flex align-items-center">
                         <div class="d-flex align-items-center mb-3">
                             <button type="button" class="btn btn-outline-secondary btn-sm me-2 decrease-qty"
                                 data-index="{{ $index }}">-</button>
@@ -46,8 +49,10 @@
                                 data-index="{{ $index }}">+</button>
                         </div>
                         <div class="ms-auto">
-                            <button type="button" class="btn btn-danger btn-sm remove-item"
-                                data-index="{{ $index }}">Hapus</button>
+                            <button type="button" class="btn btn-danger btn-sm remove-item d-flex align-items-center"
+                                data-index="{{ $index }}">
+                                <i class="bi bi-trash-fill me-1"></i> Hapus
+                            </button>
                         </div>
                     </div>
                     <input type="hidden" name="orderDetails[{{ $index }}][menu_name]"
@@ -60,7 +65,6 @@
                         value="{{ $item['category_name'] }}">
                     <input type="hidden" name="orderDetails[{{ $index }}][menu_id]"
                         value="{{ $item['menu_id'] }}">
-                    <hr>
                 </div>
             @empty
                 <div class="d-flex justify-content-center align-items-center w-100" style="height: 60vh;">
@@ -68,8 +72,16 @@
                 </div>
             @endforelse
             @if (count($orderDetails) > 0)
-                <div class="d-flex justify-content-end my-3">
-                    <button type="button" class="btn btn-success" id="checkoutButton">Checkout</button>
+                <div class="d-flex justify-content-between align-items-center my-3 p-3"
+                    style="background-color: #f8f9fa; border-radius: 8px;">
+                    <div>
+                        <h4 class="fw-semibold mb-0" style="font-size: 1rem">Total:</h4>
+                        <span id="cart-total" style="font-weight: bold; color: #14B8A6; font-size: 1.2rem">Rp 0</span>
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-success" id="checkoutButton"
+                            style="padding: 10px 20px; background-color: #14B8A6; border: none; border-radius: 5px; font-size: 1rem">Checkout</button>
+                    </div>
                 </div>
             @endif
         </form>
@@ -81,6 +93,20 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const outletId = '{{ $outletId }}';
+
+            function updateCartTotal() {
+                let total = 0;
+                document.querySelectorAll('.quantity-input').forEach((input, index) => {
+                    const price = parseFloat(document.querySelector(
+                        `input[name='orderDetails[${index}][menu_price]']`).value);
+                    const quantity = parseInt(input.value);
+                    total += price * quantity;
+                });
+                document.getElementById('cart-total').textContent = 'Rp ' + new Intl.NumberFormat('id-ID').format(
+                    total);
+            }
+
+            updateCartTotal(); // Hitung total saat pertama kali halaman dimuat
 
             document.querySelectorAll('.decrease-qty').forEach(button => {
                 button.addEventListener('click', function() {
@@ -134,6 +160,8 @@
                                     if (data.success) {
                                         document.querySelector(
                                             `div[data-index='${index}']`).remove();
+                                        updateCartTotal
+                                            (); // Update total ketika item dihapus
                                         if (document.querySelectorAll('.w-100.mb-3')
                                             .length === 0) {
                                             window.location =
@@ -198,6 +226,7 @@
                 }).then(response => response.json()).then(data => {
                     if (data.success) {
                         console.log('Cart updated successfully');
+                        updateCartTotal(); // Update total setiap ada perubahan kuantitas
                     }
                 }).catch(error => console.error('Error updating cart:', error));
             }

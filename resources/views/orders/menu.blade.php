@@ -4,33 +4,32 @@
     <main class="mx-auto justify-content-center main-content main h-100">
         {{-- Daftar Menu --}}
         @forelse($data as $categoryId => $menus)
-            <h2 class="font-20 fw-bold mb-2 text-uppercase">{{ $menus[0]['category_name'] }}</h2>
-            <div class="mb-3" style="border-top: 1px dashed #d5d5d5"></div>
+            <h2 class="font-20 fw-bold mb-2 text-uppercase" style="color: #14B8A6;">{{ $menus[0]['category_name'] }}</h2>
+            <div class="mb-3" style="border-top: 1px dashed #d5d5d5;"></div>
             @foreach ($menus as $menu)
-                <div class="w-100 mb-3">
-                    <div class="mb-1 d-flex justify-content-between">
+                <div class="w-100 mb-4 p-3 rounded shadow-sm bg-white" style="transition: transform 0.3s, box-shadow 0.3s;">
+                    <div class="mb-1 d-flex justify-content-between align-items-center">
                         <div>
-                            <h3 class="font-14 mb-0 fw-semibold">{{ $menu['name'] }}</h3>
+                            <h3 class="font-14 mb-1 fw-semibold">{{ $menu['name'] }}</h3>
                             <p class="font-12 text-muted mt-2">{{ $menu['description'] }}</p>
                         </div>
-                        <img src="{{ isset($item['image']) && !empty($item['image']) ? 'https://pos.lakesidefnb.group/storage/' . $item['image'] : asset('img/CabangLakeside.png') }}"
-                            class="rounded-3" alt="Menu" width="60" height="60">
-
+                        <img src="{{ isset($menu['image']) && !empty($menu['image']) ? 'https://pos.lakesidefnb.group/storage/' . $menu['image'] : asset('img/CabangLakeside.png') }}"
+                            class="menu-img rounded" alt="{{ $menu['name'] }}"
+                            style="width: 60px; height: 60px; object-fit: cover; border: 2px solid #14B8A6; border-radius: 0.5rem;">
                     </div>
-                    <div class="d-flex justify-content-between align-items-center" style="height: 100%;">
-                        <p class="font-12 fw-semibold mb-0">Rp
-                            {{ number_format($menu['variants'][0]['price'], 0, ',', '.') }}
-                        </p>
+                    <hr>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <p class="font-12 fw-semibold mb-0" style="color: #14B8A6;">Rp
+                            {{ number_format($menu['variants'][0]['price'], 0, ',', '.') }}</p>
                         <div class="order-controls" data-name="{{ $menu['name'] }}"
                             data-price="{{ $menu['variants'][0]['price'] }}" data-category-id="{{ $menu['category_id'] }}"
                             data-category-name="{{ $menu['category_name'] }}">
-                            <button class="font-10 color-primary fw-bold bg-white rounded-4 text-center tambah-menu"
-                                style="border: 1px solid #14b8a6; padding: 4px 12px 4px 11px">
+                            <button class="font-10 fw-bold text-center tambah-menu"
+                                style="padding: 4px 12px; background-color: #14b8a6; color: white; border: none; border-radius: 20px; transition: background-color 0.3s;">
                                 Tambah
                             </button>
                         </div>
                     </div>
-                    <hr>
                 </div>
             @endforeach
             <div class="bottom-0 pt-5"></div>
@@ -41,8 +40,9 @@
         @endforelse
 
         {{-- Modals --}}
-        <div class="bottom-drawer d-flex flex-column" id="orderDrawer">
-            <div class="drawer-header d-flex justify-content-between">
+        <div class="bottom-drawer d-flex flex-column" id="orderDrawer"
+            style="background-color: #f8f9fa; border-top-left-radius: 20px; border-top-right-radius: 20px; padding: 20px;">
+            <div class="drawer-header d-flex justify-content-between" style="padding-bottom: 10px;">
                 <h5 class="modal-title">Tambahkan ke Keranjang</h5>
                 <button type="button" class="btn-close" id="closeDrawer"></button>
             </div>
@@ -58,28 +58,27 @@
                 <h5 class="fw-semibold">Total:</h5>
                 <h5 class="fw-semibold" id="drawer-total-price">Rp 0</h5>
             </div>
-            <div class="drawer-footer d-flex justify-content-between align-items-center">
-                <div class="d-flex flex-column">
-                    <div class="qty-controls d-flex align-items-center mb-2">
-                        <button class="btn btn-outline-secondary btn-sm me-2" id="decreaseQty">-</button>
-                        <input type="number" class="form-control form-control-sm text-center" id="qtyInput" value="1"
-                            style="width: 50px;" readonly>
-                        <button class="btn btn-outline-secondary btn-sm ms-2" id="increaseQty">+</button>
-                    </div>
+            <div class="drawer-footer d-flex justify-content-between align-items-center" style="padding-top: 10px;">
+                <div class="qty-controls d-flex align-items-center mb-2">
+                    <button class="btn btn-outline-secondary btn-sm me-2" id="decreaseQty">-</button>
+                    <input type="number" class="form-control form-control-sm text-center" id="qtyInput" value="1"
+                        style="width: 50px;" readonly>
+                    <button class="btn btn-outline-secondary btn-sm ms-2" id="increaseQty">+</button>
                 </div>
                 <input type="hidden" id="branchId" value="{{ $branch_id }}">
-                <button type="button" class="btn btn-primary" id="addToCartButton">Tambahkan ke Keranjang</button>
+                <button type="button" class="btn btn-primary" style="font-size: 0.9rem"
+                    id="addToCartButton">Tambahkan</button>
             </div>
         </div>
 
         <!-- Basket Button -->
         <div class="container">
             <div class="fixed-bottom" style="margin-bottom: 24px; display: none;" id="basket-button">
-                <button type="button"
-                    class="d-flex mx-auto background-primary rounded-3 justify-content-between text-white border-0"
-                    style="height: 33px; width: 350px" id="show-basket">
+                <button type="button" class="d-flex mx-auto rounded-3 justify-content-between text-white border-0"
+                    style="background-color: #14b8a6; padding: 8px; width: 350px; height: 45px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);"
+                    id="show-basket">
                     <div class="d-flex my-auto">
-                        <i class="bi bi-cart4 ms-3 my-auto" style="font-size: 1rem; color:white"></i>
+                        <i class="bi bi-cart4 ms-3 my-auto" style="font-size: 1rem; color: white;"></i>
                         <h5 class="font-14 fw-semibold ms-2 my-auto" id="basket-items-count">0 Barang</h5>
                     </div>
                     <h5 class="font-14 me-3 my-auto fw-semibold" id="basket-total-price">Rp 0</h5>
@@ -88,6 +87,8 @@
         </div>
     </main>
 @endsection
+
+
 
 @section('scripts')
     <script>
