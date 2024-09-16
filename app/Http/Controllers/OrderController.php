@@ -433,9 +433,10 @@ class OrderController extends Controller
         // Kirim data ke API teman
         $this->sendOrderToFriendApi($orderData, $branch->api_url, $branch->api_token);
 
-        
-
+        $user = User::find(auth()->id());
         $pointsEarned = floor($totalPrice / 10000); // Perhitungan poin dari total pembelian
+        $user->user_points += $pointsEarned;
+        $user->save();
 
         return view('orders.receipt', compact('order', 'orderDetails', 'pointsEarned', 'orderData'));
     }
