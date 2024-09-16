@@ -16,6 +16,7 @@
                     <th>Logo</th>
                     <th>API URL</th>
                     <th>API Token</th>
+                    <th>Outlet ID</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -32,6 +33,7 @@
                         </td>
                         <td>{{ $branch->api_url }}</td>
                         <td>{{ $branch->api_token }}</td>
+                        <td>{{ $branch->outletId }}</td>
                         <td>
                             <a href="{{ route('dashboard.branches.edit', $branch) }}" class="btn btn-warning">Edit</a>
                             <form action="{{ route('dashboard.branches.destroy', $branch) }}" method="POST"

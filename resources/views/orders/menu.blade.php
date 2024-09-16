@@ -10,17 +10,24 @@
                 <div class="w-100 mb-3">
                     <div class="mb-1 d-flex justify-content-between">
                         <div>
-                            <h3 class="font-14 mb-0 fw-semibold">{{ $menu['menu_name'] }}</h3>
-                            <p class="font-12 fw-semibold mt-3">Rp {{ number_format($menu['menu_price'], 0, ',', '.') }}</p>
+                            <h3 class="font-14 mb-0 fw-semibold">{{ $menu['name'] }}</h3>
+                            <p class="font-12 text-muted mt-2">{{ $menu['description'] }}</p>
                         </div>
-                        <img src="{{ $menu['branch_logo'] }}" class="rounded-3" alt="Menu" width="60" height="60">
+                        <img src="{{ isset($item['image']) && !empty($item['image']) ? 'https://pos.lakesidefnb.group/storage/' . $item['image'] : asset('img/CabangLakeside.png') }}"
+                            class="rounded-3" alt="Menu" width="60" height="60">
+
                     </div>
-                    <div class="text-end">
-                        <div class="order-controls" data-name="{{ $menu['menu_name'] }}"
-                            data-price="{{ $menu['menu_price'] }}" data-category-id="{{ $menu['category_id'] }}"
+                    <div class="d-flex justify-content-between align-items-center" style="height: 100%;">
+                        <p class="font-12 fw-semibold mb-0">Rp
+                            {{ number_format($menu['variants'][0]['price'], 0, ',', '.') }}
+                        </p>
+                        <div class="order-controls" data-name="{{ $menu['name'] }}"
+                            data-price="{{ $menu['variants'][0]['price'] }}" data-category-id="{{ $menu['category_id'] }}"
                             data-category-name="{{ $menu['category_name'] }}">
                             <button class="font-10 color-primary fw-bold bg-white rounded-4 text-center tambah-menu"
-                                style="border: 1px solid #14b8a6; padding: 4px 12px 4px 11px">Tambah</button>
+                                style="border: 1px solid #14b8a6; padding: 4px 12px 4px 11px">
+                                Tambah
+                            </button>
                         </div>
                     </div>
                     <hr>
@@ -212,7 +219,13 @@
                             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
                                 'content')
                         }
-                    }).then(response => response.json())
+                    }).then(response => {
+                        if (response.ok) {
+                            return response.json();
+                        } else {
+                            console.error('Error in saving basket:', response);
+                        }
+                    })
                     .then(data => {
                         console.log('Save basket response:', data);
                     })

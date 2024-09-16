@@ -2,7 +2,7 @@
 
 @section('main')
     <main class="mx-auto justify-content-center main-content main h-100">
-        <div class="d-flex justify-content-start align-items-center mb-3 gap-2" style="margin-left: 0 !important">
+        <div class="d-flex justify-content-start align-items-center mb-3 gap-2">
             <button type="button" id="backButton" class="btn">
                 <i class="bi bi-arrow-left-circle-fill"></i>
             </button>
@@ -13,7 +13,12 @@
 
         <form id="checkout-form" method="POST" action="{{ route('checkout') }}">
             @csrf
-            <input type="hidden" name="branch_id" value="{{ $branch_id }}">
+            {{-- Check if branch_id is set before displaying --}}
+            @if (isset($outletId))
+                <input type="hidden" name="outletId" value="{{ $outletId }}">
+            @endif
+            <input type="hidden" name="outletId" value="{{ $outletId }}">
+
             @forelse($orderDetails as $index => $item)
                 <div class="w-100 mb-3" data-index="{{ $index }}">
                     <div class="mb-1 d-flex justify-content-between">
@@ -22,8 +27,8 @@
                             <p class="font-12 fw-semibold mt-3">Rp {{ number_format($item['menu_price'], 0, ',', '.') }}</p>
                             <p class="font-12 mt-1">{{ $item['category_name'] }}</p>
                         </div>
-                        <img src="{{ $item['branch_logo'] }}" class="rounded-3" alt="Menu" width="60"
-                            height="60">
+                        <img src="{{ isset($item['image']) ? 'https://pos.lakesidefnb.group/storage/' . $item['image'] : asset('img/CabangLakeside.png') }}"
+                            class="rounded-3" alt="Menu" width="60" height="60">
                     </div>
                     <div class="mb-3">
                         <label for="note-{{ $index }}" class="form-label">Catatan</label>
@@ -75,7 +80,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const branchId = '{{ $branch_id }}';
+            const outletId = '{{ $outletId }}';
 
             document.querySelectorAll('.decrease-qty').forEach(button => {
                 button.addEventListener('click', function() {
@@ -106,71 +111,45 @@
             document.querySelectorAll('.remove-item').forEach(button => {
                 button.addEventListener('click', function() {
                     const index = this.getAttribute('data-index');
-                    const item = {
-                        menu_name: document.querySelector(
-                            `input[name='orderDetails[${index}][menu_name]']`).value,
-                        menu_price: document.querySelector(
-                            `input[name='orderDetails[${index}][menu_price]']`).value,
-                        menu_id: document.querySelector(
-                            `input[name='orderDetails[${index}][menu_id]']`).value,
-                        category_id: document.querySelector(
-                            `input[name='orderDetails[${index}][category_id]']`).value,
-                        category_name: document.querySelector(
-                            `input[name='orderDetails[${index}][category_name]']`).value,
-                        note: document.querySelector(`#note-${index}`).value,
-                        quantity: document.querySelector(
-                            `input[name='orderDetails[${index}][quantity]']`).value
-                    };
-
-                    fetch('{{ route('removeItem') }}', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                            },
-                            body: JSON.stringify({
-                                index
-                            })
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                document.querySelector(`div[data-index='${index}']`).remove();
-                                if (document.querySelectorAll('.w-100.mb-3').length === 0) {
-                                    window.location =
-                                        `{{ route('order.menu', ['branch_id' => $branch_id]) }}`;
-                                }
-                            }
-                        });
-
-                    fetch('{{ route('logRemoveItem') }}', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                            },
-                            body: JSON.stringify({
-                                index,
-                                item
-                            })
-                        }).then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                console.log('Remove item log successfully saved');
-                            } else {
-                                console.error('Failed to log remove item action');
-                            }
-                        }).catch(error => {
-                            console.error('Error logging remove item action:', error);
-                        });
+                    Swal.fire({
+                        title: 'Hapus Item?',
+                        text: 'Apakah Anda yakin ingin menghapus item ini dari keranjang?',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Ya, hapus!',
+                        cancelButtonText: 'Batal'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            fetch('{{ route('removeItem') }}', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                    },
+                                    body: JSON.stringify({
+                                        index
+                                    })
+                                }).then(response => response.json())
+                                .then(data => {
+                                    if (data.success) {
+                                        document.querySelector(
+                                            `div[data-index='${index}']`).remove();
+                                        if (document.querySelectorAll('.w-100.mb-3')
+                                            .length === 0) {
+                                            window.location =
+                                                `{{ route('order.menu', ['outletId' => $outletId]) }}`;
+                                        }
+                                    }
+                                }).catch(error => console.error('Terjadi kesalahan:',
+                                    error));
+                        }
+                    });
                 });
             });
 
             document.getElementById('backButton').addEventListener('click', function() {
                 saveOrderDetails().then(() => {
-                    window.location = `{{ route('order.menu', ['branch_id' => $branch_id]) }}`;
-                }).catch(error => {
-                    console.error('Error saving order details:', error);
+                    window.location = `{{ route('order.menu', ['outletId' => $outletId]) }}`;
                 });
             });
 
@@ -199,22 +178,11 @@
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     }
-                }).then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                }).then(data => {
+                }).then(response => response.json()).then(data => {
                     if (data.success) {
-                        console.log(data);
                         console.log('Order details saved successfully');
-                    } else {
-                        throw new Error('Failed to save order details');
                     }
-                }).catch(error => {
-                    console.error('Error saving order details:', error);
-                    throw error;
-                });
+                }).catch(error => console.error('Error saving order details:', error));
             }
 
             function updateCart() {
@@ -222,21 +190,16 @@
                 const formData = new FormData(form);
 
                 fetch('{{ route('updateCart') }}', {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        }
-                    }).then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            console.log('Cart updated successfully');
-                        } else {
-                            console.error('Failed to update cart');
-                        }
-                    }).catch(error => {
-                        console.error('Error updating cart:', error);
-                    });
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                }).then(response => response.json()).then(data => {
+                    if (data.success) {
+                        console.log('Cart updated successfully');
+                    }
+                }).catch(error => console.error('Error updating cart:', error));
             }
         });
     </script>

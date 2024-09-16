@@ -19,8 +19,8 @@
                     <a href="/history" class="dropdown-item text-decoration-none font-black">Riwayat</a>
                 </li>
                 {{-- <li>
-        <a href="/about" class="dropdown-item text-decoration-none font-black">Tentang Kami</a>
-    </li> --}}
+                    <a href="/about" class="dropdown-item text-decoration-none font-black">Tentang Kami</a>
+                </li> --}}
                 <li>
                     <form method="POST" action="/logout">
                         @csrf

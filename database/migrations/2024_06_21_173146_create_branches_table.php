@@ -15,6 +15,7 @@ class CreateBranchesTable extends Migration
             $table->string('logo')->nullable();
             $table->string('api_url')->nullable();
             $table->string('api_token')->nullable();
+            $table->string('outletId')->unique()->nullable();
             $table->timestamps();
         });
     }

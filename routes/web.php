@@ -32,11 +32,11 @@ Route::middleware('auth')->group(function () {
 
     // ORDER
     Route::get('/branch', [OrderController::class, 'showBranch'])->name('showBranch');
-    Route::get('/order/menu/{branch_id}', [OrderController::class, 'pembelian'])->name('order.menu');
+    Route::get('/order/menu/{outletId}', [OrderController::class, 'pembelian'])->name('order.menu');
     Route::post('/order/add-to-cart', [OrderController::class, 'addToCart'])->name('order.addToCart');
-    Route::get('/cart/{branch_id}', [OrderController::class, 'showCart'])->name('showCart');
+    Route::get('/cart/{outletId}', [OrderController::class, 'showCart'])->name('showCart');
     Route::post('/update-cart', [OrderController::class, 'updateCart'])->name('updateCart');
-    Route::post('/remove-item', [OrderController::class, 'removeItem'])->name('removeItem');
+    Route::post('/cart/remove-item', [OrderController::class, 'removeItem'])->name('removeItem');
     Route::post('/order/checkout', [OrderController::class, 'checkout'])->name('checkout');
     Route::get('/order/verify', [OrderController::class, 'verifyCode'])->name('verifyCode');
     Route::post('/order/confirm', [OrderController::class, 'confirmOrder'])->name('confirmOrder');

@@ -11,11 +11,13 @@ use App\Models\OrderDetail;
 use App\Models\User;
 use Illuminate\Http\Request;
 use App\Models\VerificationCode;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 
 class OrderController extends Controller
 {
+    // Menampilkan branch
     public function showBranch()
     {
         $branches = Branch::all();
@@ -26,42 +28,32 @@ class OrderController extends Controller
         ]);
     }
 
+    // Method untuk menampilkan menu berdasarkan branch_id
     public function pembelian($branch_id)
     {
-        $client = new Client();
         $groupedData = [];
-        $categories = $this->fetchCategories($branch_id);
-        $branchLogo = '';
+        $categories = $this->fetchCategories($branch_id);  // Mengambil kategori
+        $menuItems = $this->getMenuItems($branch_id);  // Mengambil menu items
 
         try {
-            $branch = Branch::findOrFail($branch_id);
-            $menuItems = $this->getMenuItems($branch_id);
-
-            
-            if ($branch->logo) {
-                $branchLogo = Storage::url($branch->logo);
-            } else {
-                $branchLogo = '/img/default_logo.png'; 
-            }
-
             if (!empty($menuItems)) {
-                foreach ($menuItems as &$menu) {
+                foreach ($menuItems as $menu) {
+                    // Menambahkan nama kategori dari kategori yang diambil
                     if (isset($categories[$menu['category_id']])) {
                         $menu['category_name'] = $categories[$menu['category_id']]['category_name'];
                     } else {
                         $menu['category_name'] = 'Unknown';
                     }
-
-                    $menu['branch_logo'] = $branchLogo;
-                    $menu['id'] = $menu['id'];
                 }
 
+                // Mengelompokkan menu berdasarkan kategori
                 usort($menuItems, function ($a, $b) {
                     return $a['category_id'] <=> $b['category_id'];
                 });
 
                 $groupedData = $this->groupByCategory($menuItems);
             }
+            
         } catch (\Exception $e) {
             Log::error('Error fetching menu data', ['exception' => $e]);
         }
@@ -69,11 +61,487 @@ class OrderController extends Controller
         return view('orders.menu', [
             'banner' => 'MENU',
             'data' => $groupedData,
-            'branch_id' => $branch_id,
-            'branch_logo' => $branchLogo
+            'branch_id' => $branch_id
         ]);
     }
 
+    // Method untuk menambahkan item ke keranjang (cart)
+    public function addToCart(Request $request)
+    {
+        try {
+            // Ambil data order dari request
+            $orderDetailsJson = $request->input('orderDetails');
+            $orderDetails = json_decode($orderDetailsJson, true);
+
+            Log::info('Isi Request:', ['request' => $request->all()]);
+
+            // Validasi apakah orderDetails berisi data
+            if (is_array($orderDetails) && count($orderDetails) > 0) {
+                // Cek branch_id dari orderDetails atau session
+                $branch_id = isset($orderDetails[0]['branch_id']) ? $orderDetails[0]['branch_id'] : Session::get('branch_id');
+                if (!$branch_id) {
+                    Log::error('Branch ID not found in order details or session');
+                    return response()->json([
+                        'success' => false,
+                        'error' => 'Branch ID not found in order details or session'
+                    ], 400);
+                }
+
+                // Simpan branch_id ke dalam session jika belum disimpan
+                Session::put('branch_id', $branch_id); // Simpan branch_id ke session
+
+                // Fetch categories dan menu items dari branch_id
+                $categories = $this->fetchCategories($branch_id);
+                $menuIds = $this->getMenuItems($branch_id);
+                Log::info('category', ['category' => $categories]);
+
+                if (empty($menuIds)) {
+                    Log::error('Menu IDs not found for branch: ' . $branch_id);
+                    return response()->json([
+                        'success' => false,
+                        'error' => 'Menu IDs not found for branch: ' . $branch_id
+                    ], 400);
+                }
+
+                // Proses orderDetails, menambahkan kategori dan menu_id
+                $categoryMap = array_column($categories, 'category_name', 'id');
+                foreach ($orderDetails as &$item) {
+                    // $item['category_name'] = $categories[$item['category_id']]['category_name'] ?? 'Unknown';
+                    $item['category_name'] = $categoryMap[$item['category_id']] ?? 'Unknown';
+
+                    foreach ($menuIds as $menu) {
+                        if ($menu['name'] == $item['menu_name']) {
+                            $item['menu_id'] = $menu['id'];
+                            break;
+                        }
+                    }
+
+                    if (!isset($item['menu_id'])) {
+                        Log::error('Menu ID not found for menu: ' . $item['menu_name']);
+                        return response()->json([
+                            'success' => false,
+                            'error' => 'Menu ID not found for menu: ' . $item['menu_name']
+                        ], 400);
+                    }
+                }
+
+                // Gabungkan item order jika ada yang sama
+                $orderDetails = $this->mergeOrderDetails($orderDetails);
+                Session::put('basket', $orderDetails);
+
+                Log::info('Add to Cart OrderDetails:', ['orderDetails' => $orderDetails]);
+
+                // Kirim respons sukses dan arahkan ke cart
+                return response()->json([
+                    'success' => true,
+                    'redirect' => route('showCart', ['outletId' => $branch_id])
+                ], 200);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Invalid order details'
+                ], 400);
+            }
+        } catch (\Exception $e) {
+            Log::error('Error di addToCart:', ['error' => $e->getMessage()]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Internal server error. Silakan coba lagi nanti.'. $e
+            ], 500);
+        }
+    }
+
+
+    // Menampilkan keranjang (cart)
+    public function showCart($outletId)
+    {
+        $orderDetails = Session::get('basket', []);
+        Log::info('Show Cart OrderDetails:', ['orderDetails' => $orderDetails]);
+
+        if (empty($orderDetails)) {
+            return redirect()->route('order.menu', ['branch_id' => $outletId]);
+        }
+
+        try {
+            $branch = Branch::where('outletId', $outletId)->first();  // Menggunakan first untuk menghindari error
+            if ($branch) {
+                $branchLogo = $branch->logo ? Storage::url($branch->logo) : '/img/default_logo.png'; // Default logo jika tidak ada
+                foreach ($orderDetails as &$item) {
+                    $item['branch_logo'] = $branchLogo;
+                }
+            } else {
+                // Jika branch tidak ditemukan, berikan logo default
+                $branchLogo = '/img/default_logo.png';
+                foreach ($orderDetails as &$item) {
+                    $item['branch_logo'] = $branchLogo;
+                }
+                Log::warning('Branch ID not found: ' . $outletId);
+            }
+        } catch (\Exception $e) {
+            Log::error('Error fetching branch data', ['exception' => $e]);
+        }
+
+        return view('orders.cart', compact('orderDetails', 'outletId'));
+    }
+
+    // Mengupdate keranjang
+    public function updateCart(Request $request)
+    {
+        Log::info('Updating cart:', ['request' => $request->all()]);
+        $orderDetails = $request->input('orderDetails', []);
+        Log::info('Update Cart OrderDetails:', ['orderDetails' => $orderDetails]);
+        Session::put('basket', $orderDetails);
+
+        return response()->json(['success' => true, 'message' => 'Keranjang berhasil diperbarui!', 'data' => session('basket')]);
+    }
+
+    public function removeItem(Request $request)
+    {
+        $index = $request->input('index');
+        $orderDetails = Session::get('basket', []);
+
+        if (isset($orderDetails[$index])) {
+            unset($orderDetails[$index]);  // Hapus item berdasarkan index
+            Session::put('basket', array_values($orderDetails));  // Reset indeks array setelah penghapusan
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    // Menangani penghapusan item dari keranjang
+    public function logRemoveItem(Request $request)
+    {
+        $index = $request->input('index');
+        $item = $request->input('item');
+
+        Log::info('Item removed from cart', [
+            'index' => $index,
+            'item' => $item
+        ]);
+
+        return response()->json(['success' => true]);
+    }
+
+    // Menangani checkout
+    public function checkout(Request $request)
+    {
+        $orderDetails = $request->input('orderDetails');
+        Log::info('Checkout OrderDetails:', ['orderDetails' => $orderDetails]);
+
+        $orderDetails = $this->mergeOrderDetails($orderDetails);
+
+        Session::put('orderDetails', $orderDetails);
+
+        return redirect()->route('verifyCode');
+    }
+
+        // Verifikasi kode pesanan
+    public function verifyCode()
+    {
+        $orderDetails = Session::get('orderDetails', []);
+        Log::info('Verify Code OrderDetails:', ['orderDetails' => $orderDetails]);
+
+        if (empty($orderDetails)) {
+            // Pastikan bahwa branch_id diambil dari session dengan benar
+            $branch_id = Session::get('branch_id');
+            if (!$branch_id) {
+                Log::error('Branch ID not found in session during verifyCode');
+                return redirect()->back()->with('error', 'Branch ID tidak ditemukan.');
+            }
+            return redirect()->route('showCart', ['outletId' => $branch_id])->with('error', 'Keranjang Anda kosong.');
+        }
+
+        return view('orders.verify', compact('orderDetails'));
+    }
+
+
+    // Konfirmasi pesanan
+    public function confirmOrder(Request $request)
+    {
+        // Ambil orderDetails dari session
+        $orderDetails = Session::get('orderDetails', []);
+        $verificationCodeInput = $request->input('verification_code');
+
+        // Cek jika branch_id dalam session
+        $branch_id = Session::get('branch_id');
+        if (!$branch_id) {
+            Log::error('Branch ID not found in session during confirmOrder');
+            return redirect()->back()->with('error', 'Branch ID tidak ditemukan.');
+        }
+
+        // Cek apakah branch_id sudah ada di session
+        $branch_id = Session::get('branch_id');
+
+        // Jika branch_id sudah ada di session, perbarui nilai dengan id dari tabel Branch
+        $branch = Branch::where('outletId', $branch_id)->first();
+
+        // Jika branch ditemukan, update session branch_id dengan branch->id
+        if ($branch) {
+            $branch_id = $branch->id; // Isi session branch_id dengan id dari tabel Branch
+            Session::put('branch_id', $branch_id); // Simpan ke session
+
+            Log::info('Session branch_id updated with branch->id', [
+                'user_id' => auth()->id(),
+                'new_branch_id' => $branch_id
+            ]);
+        } else {
+            // Jika tidak ditemukan, log error dan kembalikan dengan error
+            Log::warning('Branch not found for session branch_id', [
+                'branch_id' => $branch_id,
+                'user_id' => auth()->id()
+            ]);
+            return redirect()->back()->with('error', 'Branch tidak ditemukan.');
+        }
+
+        // Setelah ini, Anda bisa melanjutkan proses logika yang lain seperti biasa
+        // Misalnya, jika Anda tetap ingin menggunakan outletId di bagian berikut, sesuaikan saja dengan logika bisnis Anda
+
+        // Contoh: Mengupdate session branch_id menjadi outletId jika diperlukan
+        if ($branch && $branch->outletId) {
+            Session::put('branch_id', $branch->outletId); // Simpan outletId ke session (jika memang perlu)
+            Log::info('Session branch_id updated to outletId', [
+                'user_id' => auth()->id(),
+                'old_branch_id' => $branch_id,
+                'new_outletId' => $branch->outletId
+            ]);
+        }
+
+        // Cari branch berdasarkan branch_id
+        $branch = Branch::where('id', $branch_id)->first();
+        if ($branch && $branch->outletId) {
+            // Update session branch_id menjadi outletId
+            Session::put('branch_id', $branch->outletId);
+            Log::info('Session branch_id updated to outletId', [
+                'user_id' => auth()->id(),
+                'old_branch_id' => $branch_id,
+                'new_outletId' => $branch->outletId
+            ]);
+        } else {
+            Log::warning('Branch not found for session branch_id', [
+                'branch_id' => $branch_id,
+                'user_id' => auth()->id()
+            ]);
+            return redirect()->back()->with('error', 'Branch tidak ditemukan.');
+        }
+
+        // Jika orderDetails kosong
+        if (empty($orderDetails)) {
+            Log::info('Order confirmation failed: orderDetails is empty', [
+                'user_id' => auth()->id(),
+                'session_branch_id' => Session::get('branch_id'),
+                'session_orderDetails' => Session::get('orderDetails'),
+                'action' => 'redirect to showCart',
+                'reason' => 'Empty orderDetails in session'
+            ]);
+
+            return redirect()->route('showCart', ['outletId' => Session::get('branch_id')])->with('error', 'Order tidak valid.');
+        }
+
+        // Verifikasi kode
+        $verificationCode = VerificationCode::where('code', $verificationCodeInput)
+                                            ->whereDate('date', Carbon::today())
+                                            ->first();
+
+        if (!$verificationCode) {
+            Log::info('Order confirmation failed: invalid verification code', [
+                'user_id' => auth()->id(),
+                'input_code' => $verificationCodeInput,
+                'orderDetails' => $orderDetails,
+                'session_branch_id' => Session::get('branch_id'),
+                'date' => Carbon::today()->toDateString(),
+                'action' => 'redirect back',
+                'reason' => 'Invalid verification code'
+            ]);
+
+            return redirect()->back()->with('error', 'Kode verifikasi tidak valid.');
+        }
+
+        Log::info('Order confirmed successfully', [
+            'user_id' => auth()->id(),
+            'verification_code' => $verificationCodeInput,
+            'orderDetails' => $orderDetails,
+            'session_branch_id' => Session::get('branch_id'),
+            'date' => Carbon::today()->toDateTimeString()
+        ]);
+
+        // Menyimpan kode verifikasi di session
+        Session::put('verification_code', $verificationCodeInput);
+
+        return redirect()->route('showReceipt');
+    }
+
+    // Menampilkan struk pesanan
+    public function showReceipt()
+    {
+        Log::info(Session::all());
+        $orderDetails = Session::get('orderDetails', []);
+        $verificationCode = Session::get('verification_code', null);
+        $outletId = Session::get('branch_id'); // Ini adalah outletId, bukan branch_id
+
+        if (empty($orderDetails) || !$verificationCode) {
+            return redirect()->route('showCart', ['outletId' => $outletId])->with('error', 'Order tidak valid atau kode verifikasi tidak ditemukan.');
+        }
+
+        // Cari branch berdasarkan outletId, bukan berdasarkan id
+        $branch = Branch::where('outletId', $outletId)->first();
+
+        if (!$branch) {
+            Log::warning('Branch ID not found: ' . $outletId);
+            return redirect()->route('showCart', ['outletId' => $outletId])->with('error', 'Branch tidak ditemukan.');
+        }
+
+        // Hitung total harga
+        $totalPrice = array_reduce($orderDetails, function ($total, $item) {
+            return $total + ($item['menu_price'] * $item['quantity']);
+        }, 0);
+
+        // Simpan order ke database dengan menggunakan id branch yang ditemukan dari outletId
+        $order = Order::create([
+            'user_id' => auth()->id(),
+            'branch_id' => $branch->outletId, // Gunakan branch_id dari branch yang ditemukan
+            'status' => 'pending',
+            'total_price' => $totalPrice,
+        ]);
+
+        // Siapkan order details sesuai format yang dibutuhkan
+        $formattedOrderDetails = [];
+        foreach ($orderDetails as $detail) {
+
+            $variant_Id = $this->fetchVariant($branch->outletId, $detail['menu_id']);
+
+            $formattedOrderDetails[] = [
+                'product_id' => $detail['menu_id'], // Sesuaikan dengan id produk dari API teman
+                'variant_id' => $variant_Id, // Pastikan variant_id ada
+                'modifier_option_ids' => [], // Bisa dikosongkan jika tidak ada
+                'qty' => $detail['quantity'],
+                'notes' => $detail['note'] ?? '',
+            ];
+        }
+
+        // Struktur JSON sesuai permintaan
+        $orderData = [
+            'customer_name' => auth()->user()->fullname, // Nama user yang sedang login
+            'phone_number' => auth()->user()->phone, // Nomor telepon user
+            'identity' => '-', // Sesuaikan jika ada field identity
+            'outlet_id' => $branch->outletId, // outletId dari tabel branch
+            'order_payment' => 3, // Sesuaikan jenis pembayaran
+            'order_totals' => $totalPrice,
+            'order_details' => $formattedOrderDetails,
+        ];
+
+        // Kirim data ke API teman
+        $this->sendOrderToFriendApi($orderData, $branch->api_url, $branch->api_token);
+
+        
+
+        $pointsEarned = floor($totalPrice / 10000); // Perhitungan poin dari total pembelian
+
+        return view('orders.receipt', compact('order', 'orderDetails', 'pointsEarned', 'orderData'));
+    }
+
+    private function fetchVariant($outletId, $menuId)
+    {
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json',
+            'Accept' => 'application/json',
+            'X-Api-Key' => 'p0s-fnb-@p1-t0k3n-2024-xnxx'
+        ])->get("https://pos.lakesidefnb.group/api/mobile/product/outlet/{$outletId}");
+
+        if ($response->successful()) {
+            $data = $response->json()['data'];
+
+            // Cari produk berdasarkan menuId
+            $product = collect($data)->firstWhere('id', $menuId);
+
+            if($product){
+                // Ambil variant Id dari produk
+                $variantIds = collect($product['variants'])->pluck('id');
+
+                if ($variantIds->isNotEmpty()) {
+                    return $variantIds->first();
+                } else{
+                    Log::warning("No variant found for Product ID: {$menuId}");
+                    return null;
+                }
+            }else{
+                Log::warning("Product Not Found: {$menuId}");
+                return null;
+            }
+        } else{
+            Log::error("Failed to fetch product data from API.");
+            return null; // Kembalikan null jika API gagal diakses
+        }
+    }
+    
+    // Mengirim pesanan ke API teman
+    private function sendOrderToFriendApi($orderData, $apiUrl, $apiToken)
+    {
+        // Log data yang dikirim sebelum mengirim request
+        Log::info('Preparing to send order', [
+            'orderData' => $orderData,
+            'apiUrl' => $apiUrl,
+            'apiToken' => $apiToken
+        ]);
+
+        $client = new \GuzzleHttp\Client();
+
+        try {
+            // Lengkapi URL dengan endpoint yang sesuai
+            $fullApiUrl = rtrim($apiUrl, '/') . '/mobile/order';
+            
+            // Log URL final yang digunakan
+            Log::info('Full API URL', ['url' => $fullApiUrl]);
+
+            // Kirim request ke API teman
+            $response = $client->post($fullApiUrl, [
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                    'Accept' => 'application/json',
+                    'X-Api-Key' => $apiToken, // Gunakan token dari branch
+                ],
+                'json' => $orderData, // Kirim data dalam format JSON
+            ]);
+
+            // Dapatkan respons body dan status
+            $statusCode = $response->getStatusCode();
+            $responseData = json_decode($response->getBody(), true);
+
+            // Cek status dari response
+            if (isset($responseData['status']) && $responseData['status'] === 'success') {
+                Log::info('Order sent successfully to friend API');
+                return true;
+            } else {
+                Log::error('Failed to send order to API', [
+                    'response' => $responseData,
+                    'status_code' => $statusCode
+                ]);
+                return false;
+            }
+        } catch (\GuzzleHttp\Exception\RequestException $e) {
+            // Tangani error khusus Guzzle
+            if ($e->hasResponse()) {
+                // Log respons error dari API
+                $errorResponse = (string) $e->getResponse()->getBody();
+                $statusCode = $e->getResponse()->getStatusCode();
+                Log::error('API Request Exception', [
+                    'error' => $errorResponse,
+                    'status_code' => $statusCode
+                ]);
+            } else {
+                Log::error('Error sending order to API: ' . $e->getMessage());
+            }
+            return false;
+        } catch (\Exception $e) {
+            // Tangani error lain-lain
+            Log::error('General Error sending order to API: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+
+
+    // Menggabungkan item order berdasarkan kategori dan menu
     private function mergeOrderDetails($orderDetails)
     {
         $merged = [];
@@ -91,139 +559,7 @@ class OrderController extends Controller
         return array_values($merged);
     }
 
-    public function addToCart(Request $request)
-    {
-        $orderDetailsJson = $request->input('orderDetails');
-        $orderDetails = json_decode($orderDetailsJson, true);
-
-        Log::info('Isi Request:', ['request' => $request->all()]);
-
-        if (is_array($orderDetails) && count($orderDetails) > 0) {
-            $branch_id = isset($orderDetails[0]['branch_id']) ? $orderDetails[0]['branch_id'] : Session::get('branch_id');
-            if (!$branch_id) {
-                Log::error('Branch ID not found in order details or session');
-                return response()->json([
-                    'success' => false,
-                    'error' => 'Branch ID not found in order details or session'
-                ], 400);
-            }
-
-            Log::info('Branch Id addToCart:', ['branch_id' => $branch_id]);
-
-            Session::put('branch_id', $branch_id);
-
-            $categories = $this->fetchCategories($branch_id);
-            $menuIds = $this->getMenuItems($branch_id);
-
-            if (empty($menuIds)) {
-                Log::error('Menu IDs not found for branch: ' . $branch_id);
-                return response()->json([
-                    'success' => false,
-                    'error' => 'Menu IDs not found for branch: ' . $branch_id
-                ], 400);
-            }
-
-            Log::info('Menu IDs found for branch: ' . $branch_id);
-
-            foreach ($orderDetails as &$item) {
-                if (isset($categories[$item['category_id']])) {
-                    $item['category_name'] = $categories[$item['category_id']]['category_name'];
-                } else {
-                    $item['category_name'] = 'Unknown';
-                }
-
-                foreach ($menuIds as $menu) {
-                    if ($menu['menu_name'] == $item['menu_name']) {
-                        $item['menu_id'] = $menu['id'];
-                        break;
-                    }
-                }
-
-                if (!isset($item['menu_id'])) {
-                    Log::error('Menu ID not found for menu: ' . $item['menu_name']);
-                    return response()->json([
-                        'success' => false,
-                        'error' => 'Menu ID not found for menu: ' . $item['menu_name']
-                    ], 400);
-                }
-            }
-
-            $orderDetails = $this->mergeOrderDetails($orderDetails);
-            Session::put('basket', $orderDetails);
-
-            Log::info('Add to Cart OrderDetails:', ['orderDetails' => $orderDetails]);
-
-            return response()->json([
-                'success' => true,
-                'redirect' => route('showCart', ['branch_id' => $branch_id])
-            ], 200);
-        } else {
-            return response()->json([
-                'success' => false,
-                'error' => 'Invalid order details'
-            ], 400);
-        }
-    }
-
-    public function showCart($branch_id)
-    {
-        $orderDetails = Session::get('basket', []);
-        Log::info('Show Cart OrderDetails:', ['orderDetails' => $orderDetails]);
-
-        if (empty($orderDetails)) {
-            return redirect()->route('order.menu', ['branch_id' => $branch_id]);
-        }
-
-        try {
-            $branch = Branch::findOrFail($branch_id);
-            $branchLogo = $branch->logo ? Storage::url($branch->logo) : '/img/default_logo.png'; // Default logo if none found
-
-            foreach ($orderDetails as &$item) {
-                $item['branch_logo'] = $branchLogo;
-            }
-        } catch (\Exception $e) {
-            Log::error('Error fetching branch data', ['exception' => $e]);
-        }
-
-        return view('orders.cart', compact('orderDetails', 'branch_id'));
-    }
-
-
-    public function updateCart(Request $request)
-    {
-        Log::info('Updating cart:', ['request' => $request->all()]);
-        $orderDetails = $request->input('orderDetails', []);
-        Log::info('Update Cart OrderDetails:', ['orderDetails' => $orderDetails]);
-        Session::put('basket', $orderDetails);
-
-        return response()->json(['success' => true, 'message' => 'Keranjang berhasil diperbarui!', 'data' => session('basket')]);
-    }
-
-    public function logRemoveItem(Request $request)
-    {
-        $index = $request->input('index');
-        $item = $request->input('item');
-
-        Log::info('Item removed from cart', [
-            'index' => $index,
-            'item' => $item
-        ]);
-
-        return response()->json(['success' => true]);
-    }
-
-    public function checkout(Request $request)
-    {
-        $orderDetails = $request->input('orderDetails');
-        Log::info('Checkout OrderDetails:', ['orderDetails' => $orderDetails]);
-
-        $orderDetails = $this->mergeOrderDetails($orderDetails);
-
-        Session::put('orderDetails', $orderDetails);
-
-        return redirect()->route('verifyCode');
-    }
-
+    // Menyimpan keranjang (basket)
     public function saveBasket(Request $request)
     {
         $data = json_decode($request->getContent(), true);
@@ -238,173 +574,9 @@ class OrderController extends Controller
         return response()->json(['success' => true]);
     }
 
-    public function verifyCode()
-    {
-        $orderDetails = Session::get('orderDetails', []);
-        Log::info('Verify Code OrderDetails:', ['orderDetails' => $orderDetails]);
-
-        if (empty($orderDetails)) {
-            return redirect()->route('showCart', ['branch_id' => Session::get('branch_id')])->with('error', 'Keranjang Anda kosong.');
-        }
-
-        return view('orders.verify', compact('orderDetails'));
-    }
-
-    public function confirmOrder(Request $request)
-    {
-        $orderDetails = Session::get('orderDetails', []);
-        $verificationCodeInput = $request->input('verification_code');
-
-        if (empty($orderDetails)) {
-            return redirect()->route('showCart', ['branch_id' => Session::get('branch_id')])->with('error', 'Order tidak valid.');
-        }
-
-        $verificationCode = VerificationCode::where('code', $verificationCodeInput)
-                                            ->whereDate('date', Carbon::today())
-                                            ->first();
-
-        if (!$verificationCode) {
-            return redirect()->back()->with('error', 'Kode verifikasi tidak valid.');
-        }
-
-        Log::info('Confirm OrderDetails:', ['orderDetails' => $orderDetails]);
-
-        Session::put('verification_code', $verificationCodeInput);
-
-        return redirect()->route('showReceipt');
-    }
-
-    public function showReceipt()
-    {
-        $orderDetails = Session::get('orderDetails', []);
-        $verificationCode = Session::get('verification_code', null);
-        $branch_id = Session::get('branch_id');
-
-        if (empty($orderDetails) || !$verificationCode) {
-            return redirect()->route('showCart', ['branch_id' => $branch_id])->with('error', 'Order tidak valid atau kode verifikasi tidak ditemukan.');
-        }
-
-        $totalPrice = array_reduce($orderDetails, function ($total, $item) {
-            return $total + ($item['menu_price'] * $item['quantity']);
-        }, 0);
-
-        $order = Order::create([
-            'user_id' => auth()->id(),
-            'branch_id' => $branch_id,
-            'status' => 'pending',
-            'total_price' => $totalPrice,
-        ]);
-
-        foreach ($orderDetails as $detail) {
-            OrderDetail::create([
-                'order_id' => $order->id,
-                'menu_id' => $detail['menu_id'],
-                'menu_name' => $detail['menu_name'],
-                'quantity' => $detail['quantity'],
-                'menu_price' => $detail['menu_price'],
-                'category_id' => $detail['category_id'],
-                'note' => $detail['note'] ?? null,
-            ]);
-        }
-
-        $user = User::find(auth()->id());
-        $pointsEarned = floor($totalPrice / 10000);
-        $user->user_points += $pointsEarned;
-        $user->save();
-
-        $orderDetails = $order->orderDetails;
-
-        Log::info('Show Receipt OrderDetails:', ['orderDetails' => $orderDetails->toArray()]);
-
-        $formattedOrderDetails = [];
-        foreach ($orderDetails as $detail) {
-            $formattedOrderDetails[] = [
-                'id' => $detail->menu_id,
-                'category_id' => $detail->category_id,
-                'menu_name' => $detail->menu_name,
-                'menu_price' => $detail->menu_price,
-                'is_available' => 1,
-                'created_at' => $detail->created_at->toIso8601String(),
-                'updated_at' => $detail->updated_at->toIso8601String(),
-                'count' => $detail->quantity,
-            ];
-        }
-
-        if ($this->sendOrderToFriendApi($formattedOrderDetails, $branch_id)) {
-            Log::info('Order successfully sent to friend API');
-
-            $order->status = 'success';
-            $order->save();
-
-            Session::forget('orderDetails');
-            Session::forget('verification_code');
-        } else {
-            Log::error('Failed to send order to friend API');
-
-            $order->status = 'error';
-            $order->save();
-
-            return redirect()->route('showCart', ['branch_id' => $branch_id])->with('error', 'Gagal mengirim pesanan ke API teman.');
-        }
-
-        return view('orders.receipt', compact('order', 'orderDetails', 'pointsEarned', 'formattedOrderDetails'));
-    }
-
-    private function sendOrderToFriendApi($formattedOrderDetails, $branch_id)
-    {
-        $branch = Branch::find($branch_id);
-
-        if (!$branch || !$branch->api_url || !$branch->api_token) {
-            Log::error('Unknown branch ID or missing API details for branch ID: ' . $branch_id);
-            return false;
-        }
-
-        $url = rtrim($branch->api_url, '/') . '/order';
-        $token = $branch->api_token;
-
-        $user = auth()->user();
-        $client = new \GuzzleHttp\Client();
-
-        try {
-            $orderData = [
-                'order_name' => $user->fullname,
-                'order_items' => $formattedOrderDetails,
-                'order_payment' => 3,
-                'order_total' => array_reduce($formattedOrderDetails, function ($total, $item) {
-                    return $total + ($item['menu_price'] * $item['count']);
-                }, 0),
-                'order_phone_number' => $user->phone,
-                'referral_code' => null,
-            ];
-
-            Log::info('Sending order to API with data:', ['orderData' => $orderData]);
-
-            $response = $client->post($url, [
-                'headers' => [
-                    'Authorization' => 'Bearer ' . $token,
-                    'Content-Type' => 'application/json',
-                ],
-                'json' => $orderData,
-            ]);
-
-            $responseData = json_decode($response->getBody(), true);
-
-            Log::info('Response data:', ['responseData' => $responseData]);
-
-            if ($responseData && isset($responseData['status']) && $responseData['status'] == 'success') {
-                Log::info('Order sent successfully to API');
-                return true;
-            } else {
-                Log::error('Failed to send order to API. Response:', ['responseData' => $responseData]);
-                return false;
-            }
-        } catch (\Exception $e) {
-            Log::error('Error sending order to API: ' . $e->getMessage());
-            return false;
-        }
-    }
 
 
+    // Mengelompokkan menu berdasarkan kategori
     private function groupByCategory($menus)
     {
         $grouped = [];
@@ -414,93 +586,40 @@ class OrderController extends Controller
         return $grouped;
     }
 
+    // Mengambil data kategori dari API
     private function fetchCategories($branch_id)
     {
-        $client = new Client();
-        if ($branch_id == 1) {
-            $url = 'https://cashier.matradipti.org/api/category';
-            $token = '13225|X0P930aqQqd1lJhV671oCxMT7TNwnVFdx1JeEspt';
-        } elseif ($branch_id == 2) {
-            $url = 'https://lakesidefit.matradipti.org/api/category';
-            $token = '12412|chgOcN0JHfShyzi7kc9oLEsk6at9vQbrMI49gjew';
-        } elseif ($branch_id == 3) {
-            $url = 'https://literasicafe.matradipti.org/api/category';
-            $token = '12611|TYa3BCfoS1ETBIDUXUcb3dHmcKnOAOQk3sMoqPzO';
+        $apiUrl = "https://pos.lakesidefnb.group/api/mobile/category/outlet/{$branch_id}";
+        $apiKey = 'p0s-fnb-@p1-t0k3n-2024-xnxx'; 
+
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json',
+            'Accept' => 'application/json',
+            'X-Api-Key' => $apiKey
+        ])->get($apiUrl);
+
+        if ($response->successful()) {
+            return $response->json()['data'];  
         } else {
-            Log::error('fetchCategories Unknown branch ID: ' . $branch_id);
-            return [];
-        }
-
-        try {
-            $response = $client->get($url, [
-                'headers' => [
-                    'Authorization' => 'Bearer ' . $token,
-                ]
-            ]);
-            $data = json_decode($response->getBody(), true);
-
-            if ($data && $data['status'] == 'success' && isset($data['data'])) {
-                Log::info('Fetched Categories:', ['categories' => $data['data']]);
-                $categories = [];
-                foreach ($data['data'] as $category) {
-                    $categories[$category['id']] = $category;
-                }
-                return $categories;
-            } else {
-                Log::error('Failed to fetch categories:', ['data' => $data]);
-                return [];
-            }
-        } catch (\Exception $e) {
-            Log::error('Error fetching categories:', ['error' => $e->getMessage()]);
             return [];
         }
     }
 
-    public function removeItem(Request $request)
-    {
-        $index = $request->input('index');
-        $orderDetails = Session::get('basket', []);
-
-        if (isset($orderDetails[$index])) {
-            unset($orderDetails[$index]);
-            Session::put('basket', array_values($orderDetails));
-        }
-
-        return response()->json(['success' => true]);
-    }
-
+    // Mengambil menu items berdasarkan branch_id
     public function getMenuItems($branch_id)
     {
-        $client = new \GuzzleHttp\Client();
+        $apiUrl = "https://pos.lakesidefnb.group/api/mobile/product/outlet/{$branch_id}";
+        $apiKey = 'p0s-fnb-@p1-t0k3n-2024-xnxx'; 
 
-        // Ambil URL dan token dari tabel Branch
-        $branch = Branch::find($branch_id);
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json',
+            'Accept' => 'application/json',
+            'X-Api-Key' => $apiKey
+        ])->get($apiUrl);
 
-        if (!$branch || !$branch->api_url || !$branch->api_token) {
-            Log::error('getMenuItems: Invalid branch ID or missing API details for branch ID: ' . $branch_id);
-            return [];
-        }
-
-        $url = rtrim($branch->api_url, '/') . '/menu/available';
-        $token = $branch->api_token;
-
-        try {
-            $response = $client->request('GET', $url, [
-                'headers' => [
-                    'Authorization' => 'Bearer ' . $token,
-                    'Content-Type' => 'application/json',
-                ],
-            ]);
-
-            $responseData = json_decode($response->getBody(), true);
-
-            if (isset($responseData['data']) && is_array($responseData['data'])) {
-                return $responseData['data'];
-            } else {
-                return [];
-            }
-        } catch (\Exception $e) {
-            Log::error('Error fetching menu data for branch ID ' . $branch_id . ': ' . $e->getMessage());
+        if ($response->successful()) {
+            return $response->json()['data'];  
+        } else {
             return [];
         }
     }

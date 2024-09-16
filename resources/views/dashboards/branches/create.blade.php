@@ -26,6 +26,10 @@
                 <label for="api_token" class="form-label">API Token</label>
                 <input type="text" class="form-control" id="api_token" name="api_token">
             </div>
+            <div class="mb-3">
+                <label for="outletId" class="form-label">Outlet ID</label>
+                <input type="text" class="form-control" id="outletId" name="outletId">
+            </div>
             <button type="submit" class="btn btn-primary">Add Branch</button>
             <a href="{{ route('dashboard.branches') }}" class="btn btn-secondary">Back to Manage Branches</a>
         </form>
