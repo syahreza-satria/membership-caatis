@@ -255,7 +255,6 @@ class OrderController extends Controller
         return view('orders.verify', compact('orderDetails'));
     }
 
-
     // Konfirmasi pesanan
     public function confirmOrder(Request $request)
     {
@@ -368,35 +367,11 @@ class OrderController extends Controller
         // Menyimpan kode verifikasi di session
         Session::put('verification_code', $verificationCodeInput);
 
-        return redirect()->route('showReceipt');
-    }
-
-    // Menampilkan struk pesanan
-    public function showReceipt()
-    {
-        Log::info(Session::all());
-        $orderDetails = Session::get('orderDetails', []);
-        $verificationCode = Session::get('verification_code', null);
-        $outletId = Session::get('branch_id'); // Ini adalah outletId, bukan branch_id
-
-        if (empty($orderDetails) || !$verificationCode) {
-            return redirect()->route('showCart', ['outletId' => $outletId])->with('error', 'Order tidak valid atau kode verifikasi tidak ditemukan.');
-        }
-
-        // Cari branch berdasarkan outletId
-        $branch = Branch::where('outletId', $outletId)->first();
-
-        if (!$branch) {
-            Log::warning('Branch ID not found: ' . $outletId);
-            return redirect()->route('showCart', ['outletId' => $outletId])->with('error', 'Branch tidak ditemukan.');
-        }
-
-        // Hitung total harga
+        // Pembuatan order dilakukan di sini
         $totalPrice = array_reduce($orderDetails, function ($total, $item) {
             return $total + ($item['menu_price'] * $item['quantity']);
         }, 0);
 
-        // Simpan order ke database
         $order = Order::create([
             'user_id' => auth()->id(),
             'branch_id' => $branch->outletId,
@@ -404,7 +379,6 @@ class OrderController extends Controller
             'total_price' => $totalPrice,
         ]);
 
-        // Simpan setiap detail pesanan ke database
         foreach ($orderDetails as $detail) {
             OrderDetail::create([
                 'order_id' => $order->id, // Menghubungkan dengan order yang baru saja dibuat
@@ -412,12 +386,12 @@ class OrderController extends Controller
                 'menu_name' => $detail['menu_name'],
                 'quantity' => $detail['quantity'],
                 'menu_price' => $detail['menu_price'],
-                'category_id' => $detail['category_id'], // Pastikan ini ada di orderDetails
+                'category_id' => $detail['category_id'],
                 'note' => $detail['note'] ?? '',
             ]);
         }
 
-        // Siapkan data untuk dikirim ke API
+        // Pengiriman ke API Teman dilakukan di sini
         $formattedOrderDetails = [];
         foreach ($orderDetails as $detail) {
             $variant_Id = $this->fetchVariant($branch->outletId, $detail['menu_id']);
@@ -449,10 +423,36 @@ class OrderController extends Controller
         $user->user_points += $pointsEarned;
         $user->save();
 
-        return view('orders.receipt', compact('order', 'orderDetails', 'pointsEarned', 'orderData'));
+        // Simpan data yang diperlukan di session
+        Session::put('order_id', $order->id);
+        Session::put('points_earned', $pointsEarned);
+
+        return redirect()->route('showReceipt');
     }
 
 
+    // Menampilkan struk pesanan
+    public function showReceipt()
+    {
+        Log::info(Session::all());
+        $orderDetails = Session::get('orderDetails', []);
+        $verificationCode = Session::get('verification_code', null);
+        $outletId = Session::get('branch_id'); // Ini adalah outletId, bukan branch_id
+        $orderId = Session::get('order_id');
+        $pointsEarned = Session::get('points_earned', 0);
+
+        if (empty($orderDetails) || !$verificationCode) {
+            return redirect()->route('showCart', ['outletId' => $outletId])->with('error', 'Order tidak valid atau kode verifikasi tidak ditemukan.');
+        }
+
+        // Cari order berdasarkan order_id
+        $order = Order::find($orderId);
+
+        return view('orders.receipt', compact('order', 'orderDetails', 'pointsEarned'));
+    }
+
+    
+    // private function 
     private function fetchVariant($outletId, $menuId)
     {
         $response = Http::withHeaders([
@@ -551,8 +551,6 @@ class OrderController extends Controller
             return false;
         }
     }
-
-
 
     // Menggabungkan item order berdasarkan kategori dan menu
     private function mergeOrderDetails($orderDetails)

@@ -13,7 +13,7 @@
                             <h3 class="font-14 mb-1 fw-semibold">{{ $menu['name'] }}</h3>
                             <p class="font-12 text-muted mt-2">{{ $menu['description'] }}</p>
                         </div>
-                        <img src="{{ isset($menu['image']) && !empty($menu['image']) ? 'https://pos.lakesidefnb.group/storage/' . $menu['image'] : asset('img/CabangLakeside.png') }}"
+                        <img src="{{ isset($menu['image']) && !empty($menu['image']) ? 'https://pos.lakesidefnb.group/storage/' . $menu['image'] : asset('img/default-image.png') }}"
                             class="menu-img rounded" alt="{{ $menu['name'] }}"
                             style="width: 60px; height: 60px; object-fit: cover; border: 2px solid #14B8A6; border-radius: 0.5rem;">
                     </div>

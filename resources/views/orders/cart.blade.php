@@ -29,7 +29,7 @@
                             <p class="font-12 fw-semibold mt-3">Rp {{ number_format($item['menu_price'], 0, ',', '.') }}</p>
                             <p class="font-12 mt-1 text-muted">{{ $item['category_name'] }}</p>
                         </div>
-                        <img src="{{ isset($item['image']) ? 'https://pos.lakesidefnb.group/storage/' . $item['image'] : asset('img/CabangLakeside.png') }}"
+                        <img src="{{ isset($item['image']) ? 'https://pos.lakesidefnb.group/storage/' . $item['image'] : asset('img/default-image.png') }}"
                             class="rounded-3" alt="Menu" width="60" height="60"
                             style="border: 2px solid #14B8A6;">
                     </div>
@@ -96,9 +96,9 @@
 
             function updateCartTotal() {
                 let total = 0;
-                document.querySelectorAll('.quantity-input').forEach((input, index) => {
-                    const price = parseFloat(document.querySelector(
-                        `input[name='orderDetails[${index}][menu_price]']`).value);
+                document.querySelectorAll('.quantity-input').forEach((input) => {
+                    const price = parseFloat(input.closest('.w-100').querySelector(
+                        'input[name$="[menu_price]"]').value);
                     const quantity = parseInt(input.value);
                     total += price * quantity;
                 });
@@ -107,6 +107,26 @@
             }
 
             updateCartTotal(); // Hitung total saat pertama kali halaman dimuat
+
+            // Fungsi untuk memperbarui indeks array setelah penghapusan item
+            function updateIndices() {
+                document.querySelectorAll('.w-100.mb-3').forEach((itemDiv, newIndex) => {
+                    // Update semua atribut terkait indeks dengan newIndex yang benar
+                    itemDiv.setAttribute('data-index', newIndex);
+                    itemDiv.querySelectorAll('input, textarea, button').forEach(input => {
+                        const oldName = input.getAttribute('name');
+                        if (oldName) {
+                            // Replace old index in the name attribute
+                            const newName = oldName.replace(/\[\d+\]/, `[${newIndex}]`);
+                            input.setAttribute('name', newName);
+                        }
+                        if (input.classList.contains('decrease-qty') || input.classList.contains(
+                                'increase-qty') || input.classList.contains('remove-item')) {
+                            input.setAttribute('data-index', newIndex);
+                        }
+                    });
+                });
+            }
 
             document.querySelectorAll('.decrease-qty').forEach(button => {
                 button.addEventListener('click', function() {
@@ -117,7 +137,7 @@
                     if (quantity > 1) {
                         quantity--;
                         quantityInput.value = quantity;
-                        updateCart();
+                        updateCart(); // Panggil update cart setelah perubahan
                     }
                 });
             });
@@ -130,7 +150,7 @@
                     let quantity = parseInt(quantityInput.value);
                     quantity++;
                     quantityInput.value = quantity;
-                    updateCart();
+                    updateCart(); // Panggil update cart setelah perubahan
                 });
             });
 
@@ -158,10 +178,19 @@
                                 }).then(response => response.json())
                                 .then(data => {
                                     if (data.success) {
-                                        document.querySelector(
-                                            `div[data-index='${index}']`).remove();
+                                        // Hapus elemen item dari DOM
+                                        const itemDiv = document.querySelector(
+                                            `div[data-index='${index}']`);
+                                        if (itemDiv) {
+                                            itemDiv.remove();
+                                        }
                                         updateCartTotal
                                             (); // Update total ketika item dihapus
+
+                                        // Perbarui indeks setelah penghapusan
+                                        updateIndices();
+
+                                        // Redirect ke halaman menu jika tidak ada item tersisa
                                         if (document.querySelectorAll('.w-100.mb-3')
                                             .length === 0) {
                                             window.location =
