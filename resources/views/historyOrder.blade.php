@@ -8,9 +8,10 @@
             </div>
         @else
             <div class="container">
-                <div class="row">
+                <!-- Grid responsif dengan 1 kolom di semua ukuran layar -->
+                <div class="row row-cols-1 g-4">
                     @foreach ($orders as $order)
-                        <div class="col-md-6 mb-4">
+                        <div class="col">
                             <div class="card shadow">
                                 <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
                                     <h5 class="fw-bold font-14">OrderID: {{ $order->id }}</h5>
