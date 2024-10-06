@@ -15,7 +15,7 @@
             @csrf
             <div class="mb-2">
                 <label for="phone" class=" form-label font-14 fw-bold mb-1">No Handphone</label>
-                <input type="tel" name="phone" id="phone" placeholder="Masukkan No Handphone" class="form-control"
+                <input type="tel" name="phone" id="phone" class="form-control"
                     value="{{ old('phone') }}">
 
                 @error('phone')
@@ -24,7 +24,7 @@
             </div>
             <div class="mb-2">
                 <label for="password" class=" form-label font-14 fw-bold mb-1">Password</label>
-                <input type="password" name="password" id="password" placeholder="Masukkan Password" class="form-control"
+                <input type="password" name="password" id="password" class="form-control"
                     name="password" value="{{ old('password') }}">
 
                 @error('password')

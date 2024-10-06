@@ -14,8 +14,7 @@
             @csrf
             <div class="mb-2">
                 <label for="fullname" class="form-label font-14 fw-bold  mb-1">Nama Lengkap</label>
-                <input type="text" class="form-control " id="fullname" placeholder="Masukkan nama lengkap"
-                    name="fullname" value="{{ old('fullname') }}">
+                <input type="text" class="form-control " id="fullname" name="fullname" value="{{ old('fullname') }}">
 
                 @error('fullname')
                     <p class="text-danger font-14 mt-1">{{ $message }}</p>
@@ -23,8 +22,7 @@
             </div>
             <div class="mb-2">
                 <label for="email" class="form-label font-14 fw-bold  mb-1">E-mail</label>
-                <input type="email" class="form-control " id="email" placeholder="Masukkan email" name="email"
-                    value="{{ old('email') }}">
+                <input type="email" class="form-control " id="email" name="email" value="{{ old('email') }}">
 
                 @error('email')
                     <p class="text-danger font-14 mt-1">{{ $message }}</p>
@@ -32,8 +30,7 @@
             </div>
             <div class="mb-2">
                 <label for="phone" class="form-label font-14 fw-bold  mb-1">Nomor Handphone</label>
-                <input type="tel" class="form-control " id="phone" placeholder="Masukkan nomor handphone"
-                    name="phone" value="{{ old('phone') }}">
+                <input type="tel" class="form-control " id="phone" name="phone" value="{{ old('phone') }}">
 
                 @error('phone')
                     <p class="text-danger font-14 mt-1">{{ $message }}</p>
@@ -41,7 +38,7 @@
             </div>
             <div class="mb-2">
                 <label for="password" class="form-label font-14 fw-bold  mb-1">Password</label>
-                <input type="password" class="form-control " id="password" placeholder="Masukkan password" name="password">
+                <input type="password" class="form-control " id="password" name="password">
 
                 @error('password')
                     <p class="text-danger font-14 mt-1">{{ $message }}</p>
@@ -49,8 +46,7 @@
             </div>
             <div class="mb-4">
                 <label for="password" class="form-label font-14 fw-bold  mb-1">Konfirmasi Password</label>
-                <input type="password" class="form-control " id="password" placeholder="Masukkan Ulang password"
-                    name="password_confirmation">
+                <input type="password" class="form-control " id="password" name="password_confirmation">
 
                 @error('password_confirmation')
                     <p class="text-danger font-14 mt-1">{{ $message }}</p>

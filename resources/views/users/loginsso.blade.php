@@ -14,8 +14,8 @@
         <form action="/users/sso" method="POST">
             @csrf
             <div class="mb-2">
-                <label for="username" class=" form-label font-14 fw-bold mb-1">Username</label>
-                <input type="text" name="username" id="username" placeholder="Masukkan username" class="form-control"
+                <label for="username" class=" form-label font-14 fw-bold mb-1">Username SSO</label>
+                <input type="text" name="username" id="username" class="form-control"
                     value="{{ old('username') }}">
 
                 @error('username')
@@ -24,7 +24,7 @@
             </div>
             <div class="mb-2">
                 <label for="password" class=" form-label font-14 fw-bold mb-1">Password</label>
-                <input type="password" name="password" id="password" placeholder="Masukkan Password" class="form-control"
+                <input type="password" name="password" id="password" class="form-control"
                     name="password" value="{{ old('password') }}">
 
                 @error('password')
