@@ -22,9 +22,7 @@
 </head>
 
 <body>
-    <header>
-        @include('partials/header-main')
-    </header>
+    @include('partials/header-main')
 
     <main class="mx-auto justify-content-center main-content main">
         @yield('content')

@@ -2,7 +2,8 @@
 
 @section('content')
     <main class="mx-auto justify-content-center main-content main">
-        <h2 class="font-20 fw-bold mb-3">Silahkan Pilih Cabang</h2>
+        <h2 class="font-20 fw-bold mb-2">Selamat Datang!</h2>
+        <p style="font-size: 13px">Mulai berbelanja sekarang dengan outlet pilihan anda</p>
         @foreach ($branches as $branch)
             <a class="w-100 mb-2 shadow-sm d-flex rounded-3 text-decoration-none text-dark"
                 href="{{ route('order.menu', $branch->outletId) }}">

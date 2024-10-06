@@ -1,37 +1,56 @@
 @extends('layouts.layout-main')
 
 @section('pemesanan')
+    <div id="backdrop" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 10;"></div>
+
+    <section class="px-2 py-4 mx-auto" style="max-width: 420px">
+        <div class="d-flex text-dark text-start ms-3">
+            <img src="{{ Storage::url($branch->logo) }}" style="border: 1px solid #14B8A6" class="rounded-3" alt="{{ $branch->name }}" height="70" width="70">
+            <div class="ms-2">
+                <h3 class="font-16 fw-bold mb-2">{{ $branch->name }}</h3>
+                <p class="m-0" style="font-size:13px;"><i class="bi bi-geo-alt-fill me-1" style="color: #ffc800"></i>{{ $branch->address }}</p>
+                <span class="badge rounded-pill bg-primary" style="background: linear-gradient(90deg, rgb(33, 107, 196) 0%, rgb(0, 110, 242) 100%);"><i class="bi bi-check-lg"></i> Verified Outlet</span>
+            </div>
+        </div>
+    </section>
+    <div class="mx-auto" style="max-width: 420px; border-top: 1px solid rgb(232, 232, 232)"></div>
+
     <main class="mx-auto justify-content-center main-content main h-100">
         {{-- Daftar Menu --}}
         @forelse($data as $categoryId => $menus)
             <h2 class="font-20 fw-bold mb-2 text-uppercase" style="color: #14B8A6;">{{ $menus[0]['category_name'] }}</h2>
             <div class="mb-3" style="border-top: 1px dashed #d5d5d5;"></div>
-            @foreach ($menus as $menu)
-                <div class="w-100 mb-4 p-3 rounded shadow-sm bg-white" style="transition: transform 0.3s, box-shadow 0.3s;">
-                    <div class="mb-1 d-flex justify-content-between align-items-center">
-                        <div>
-                            <h3 class="font-14 mb-1 fw-semibold">{{ $menu['name'] }}</h3>
-                            <p class="font-12 text-muted mt-2">{{ $menu['description'] }}</p>
+            <div class="px-2">
+                @foreach ($menus as $menu)
+                    <div class="w-100 mb-4 p-3 rounded shadow-sm bg-white" style="transition: transform 0.3s, box-shadow 0.3s;">
+                        <div class="mb-1 d-flex justify-content-between align-items-center">
+                            <div>
+                                <h3 class="font-14 mb-1 fw-semibold">{{ $menu['name'] }}</h3>
+                                @if ($menu['is_active'] == 0)
+                                    <span class="font-12 text-muted">(Stok Habis)</span>
+                                @endif
+                                <p class="font-12 text-muted mt-2">{{ $menu['description'] }}</p>
+                            </div>
+                            <img src="{{ isset($menu['image']) && !empty($menu['image']) ? 'https://pos.lakesidefnb.group/storage/' . $menu['image'] : asset('img/default-image.png') }}"
+                                class="menu-img rounded" alt="{{ $menu['name'] }}"
+                                style="width: 60px; height: 60px; object-fit: cover; border: 2px solid #14B8A6; border-radius: 0.5rem;">
                         </div>
-                        <img src="{{ isset($menu['image']) && !empty($menu['image']) ? 'https://pos.lakesidefnb.group/storage/' . $menu['image'] : asset('img/default-image.png') }}"
-                            class="menu-img rounded" alt="{{ $menu['name'] }}"
-                            style="width: 60px; height: 60px; object-fit: cover; border: 2px solid #14B8A6; border-radius: 0.5rem;">
-                    </div>
-                    <hr>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <p class="font-12 fw-semibold mb-0" style="color: #14B8A6;">Rp
-                            {{ number_format($menu['variants'][0]['price'], 0, ',', '.') }}</p>
-                        <div class="order-controls" data-name="{{ $menu['name'] }}"
-                            data-price="{{ $menu['variants'][0]['price'] }}" data-category-id="{{ $menu['category_id'] }}"
-                            data-category-name="{{ $menu['category_name'] }}">
-                            <button class="font-10 fw-bold text-center tambah-menu"
-                                style="padding: 4px 12px; background-color: #14b8a6; color: white; border: none; border-radius: 20px; transition: background-color 0.3s;">
-                                Tambah
-                            </button>
+                        <hr>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <p class="font-12 fw-semibold mb-0" style="color: {{ $menu['is_active'] == 0 ? '#d3d3d3' : '#14b8a6' }};">Rp
+                                {{ number_format($menu['variants'][0]['price'], 0, ',', '.') }}</p>
+                            <div class="order-controls" data-name="{{ $menu['name'] }}"
+                                data-price="{{ $menu['variants'][0]['price'] }}" data-category-id="{{ $menu['category_id'] }}"
+                                data-category-name="{{ $menu['category_name'] }}">
+                                <button class="font-10 fw-bold text-center tambah-menu"
+                                    style="padding: 4px 12px; background-color: {{ $menu['is_active'] == 0 ? '#d3d3d3' : '#14b8a6' }}; color: white; border: none; border-radius: 20px; transition: background-color 0.3s;" {{ $menu['is_active'] == 0 ? 'disabled' : '' }}>
+                                    Tambah
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            @endforeach
+                @endforeach
+            </div>
             <div class="bottom-0 pt-5"></div>
         @empty
             <div class="d-flex justify-content-center align-items-center w-100" style="height: 60vh;">
@@ -41,33 +60,35 @@
 
         {{-- Modals --}}
         <div class="bottom-drawer d-flex flex-column" id="orderDrawer"
-            style="background-color: #f8f9fa; border-top-left-radius: 20px; border-top-right-radius: 20px; padding: 20px;">
-            <div class="drawer-header d-flex justify-content-between" style="padding-bottom: 10px;">
-                <h5 class="modal-title">Tambahkan ke Keranjang</h5>
-                <button type="button" class="btn-close" id="closeDrawer"></button>
-            </div>
+            style="border-top-left-radius: 20px; border-top-right-radius: 20px;">
+            <div style="width: 32px; height: 2px; background: rgb(196, 196, 196); border-radius: 100px; margin: auto auto 16px; margin-top: 5px"></div>
             <div class="drawer-body flex-grow-1">
-                <h5 id="drawer-menu-name"></h5>
-                <p id="drawer-menu-price"></p>
+                <h5 id="drawer-menu-name" class="fw-bolder"></h5>
+                <p id="drawer-menu-price" class="fw-bolder"></p>
                 <div class="mb-3">
                     <label for="orderNote" class="form-label">Catatan</label>
                     <textarea class="form-control" id="orderNote" rows="3"></textarea>
                 </div>
             </div>
-            <div class="d-flex justify-content-end me-4">
-                <h5 class="fw-semibold">Total:</h5>
-                <h5 class="fw-semibold" id="drawer-total-price">Rp 0</h5>
-            </div>
-            <div class="drawer-footer d-flex justify-content-between align-items-center" style="padding-top: 10px;">
-                <div class="qty-controls d-flex align-items-center mb-2">
-                    <button class="btn btn-outline-secondary btn-sm me-2" id="decreaseQty">-</button>
-                    <input type="number" class="form-control form-control-sm text-center" id="qtyInput" value="1"
-                        style="width: 50px;" readonly>
-                    <button class="btn btn-outline-secondary btn-sm ms-2" id="increaseQty">+</button>
+            <hr class="divider"/>
+            <div class="drawer-footer" style="padding-top: 10px;">
+                <div class="d-flex justify-content-between mb-3">
+                    <h6>Jumlah</h6>
+                    <div class="qty-controls d-flex align-items-center mb-2">
+                        <button class="btn btn-outline-secondary btn-sm me-2 rounded-pill" id="decreaseQty">-</button>
+                        <input type="number" class="form-control form-control-sm text-center" id="qtyInput" value="1"
+                            style="width: 50px;" readonly>
+                        <button class="btn btn-outline-secondary btn-sm rounded-pill ms-2" id="increaseQty">+</button>
+                    </div>
                 </div>
+                
                 <input type="hidden" id="branchId" value="{{ $branch_id }}">
-                <button type="button" class="btn btn-primary" style="font-size: 0.9rem"
-                    id="addToCartButton">Tambahkan</button>
+                <button type="button" class="btn btn-primary rounded-pill w-100" style="font-size: 0.9rem"id="addToCartButton">
+                    <div class="d-flex justify-content-between">
+                        <span>+ Keranjang</span>
+                        <span id="drawer-total-price">Rp 0</span>
+                    </div>
+                </button>
             </div>
         </div>
 
@@ -93,6 +114,7 @@
 @section('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            const backdrop = document.getElementById('backdrop');
             let basket = @json(Session::get('basket', []));
             let currentItem = null;
             let qty = 1;
@@ -124,6 +146,8 @@
 
                     // Show drawer
                     document.getElementById('orderDrawer').style.bottom = '0';
+                    // Show backdrop
+                    backdrop.style.display = 'block';
                 });
             });
 
@@ -170,6 +194,9 @@
 
                     // Hide drawer
                     document.getElementById('orderDrawer').style.bottom = '-100%';
+
+                    // Hide backdrop
+                    backdrop.style.display = 'none';
 
                     // Save basket to session
                     saveBasketToSession(basket);
@@ -255,13 +282,15 @@
                     .catch(error => console.error('Error:', error));
             });
 
-            // Event untuk menutup drawer
-            document.getElementById('closeDrawer').addEventListener('click', function() {
-                document.getElementById('orderDrawer').style.bottom = '-100%';
-            });
-
             // Initialize basket button on page load
             updateBasketButton();
+
+            backdrop.addEventListener('click', function() {
+                // Hide drawer
+                document.getElementById('orderDrawer').style.bottom = '-100%';
+                // Hide backdrop
+                backdrop.style.display = 'none';
+            });
         });
     </script>
 @endsection

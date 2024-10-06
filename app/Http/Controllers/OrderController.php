@@ -34,6 +34,7 @@ class OrderController extends Controller
         $groupedData = [];
         $categories = $this->fetchCategories($branch_id);  // Mengambil kategori
         $menuItems = $this->getMenuItems($branch_id);  // Mengambil menu items
+        $branch = Branch::where('outletId', $branch_id)->first();
 
         try {
             if (!empty($menuItems)) {
@@ -59,8 +60,8 @@ class OrderController extends Controller
         }
 
         return view('orders.menu', [
-            'banner' => 'MENU',
             'data' => $groupedData,
+            'branch' => $branch,
             'branch_id' => $branch_id
         ]);
     }

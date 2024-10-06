@@ -237,20 +237,18 @@ form .button-sso {
     flex-grow: 1;
 }
 
-.drawer-footer {
-    padding: 1rem;
-    background: #f9f9f9;
-    border-top: 1px solid #ddd;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
 .btn-close {
     background: none;
     border: none;
     font-size: 1.5rem;
     cursor: pointer;
+}
+
+#decreaseQty, #increaseQty {
+    width: 30px;        
+    height: 30px;      
+    font-size: 20px;
+    line-height: 0;
 }
 
 .qty-controls {
@@ -265,4 +263,12 @@ form .button-sso {
     right: 0;
     z-index: 1050;
     padding: 1rem;
+}
+
+.divider {
+    border-width: 1px 8px 8px;
+    border-style: solid;
+    border-color: rgb(232, 232, 232) rgb(187, 187, 187) rgb(187, 187, 187);
+    border-image: none;
+    margin: 0px;
 }

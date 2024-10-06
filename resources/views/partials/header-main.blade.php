@@ -1,5 +1,5 @@
 {{-- Navbar Start --}}
-<nav class="navbar background-secondary">
+<nav class="navbar background-secondary sticky-top" style="z-index: 9;">
     <div class="container">
         <a class="navbar-brand" href="/">
             <img src="/img/lakesidefnb-white.png" alt="lakesidefnb" height="20">
@@ -34,8 +34,10 @@
 </nav>
 {{-- Navbar End --}}
 
-{{-- Hero Start --}}
-<section class="background-gradient justify-content-center text-center align-items-center hero-main">
-    <h1 class="fw-bold text-white font-32 ">{{ $banner }}</h1>
-</section>
-{{-- Hero End --}}
+@if(!Request::is('branch') && !Request::is('order/menu/*'))
+    {{-- Hero Start --}}
+    <section class="background-gradient justify-content-center text-center align-items-center hero-main">
+        <h1 class="fw-bold text-white font-32 ">{{ $banner }}</h1>
+    </section>
+    {{-- Hero End --}}
+@endif
