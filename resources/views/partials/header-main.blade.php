@@ -2,7 +2,7 @@
 <nav class="navbar background-secondary">
     <div class="container">
         <a class="navbar-brand" href="/">
-            <img src="/img/logoCaatis.png" alt="Logo Caatis" height="32">
+            <img src="/img/lakesidefnb-white.png" alt="lakesidefnb" height="20">
         </a>
         <div class="btn-group">
             <button type="button" class="btn background-secondary" data-bs-toggle="dropdown" aria-expanded="false">
