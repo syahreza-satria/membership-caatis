@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>CAATIS</title>
+    <title>{{ env('APP_NAME') }}</title>
 
     <!-- Tambahkan ini di file layout utama -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet">
@@ -38,6 +38,17 @@
     </script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script>
+        const titleText = "{{ env('APP_NAME') }}";
+        let index = 0;
+
+        function scrollTitle() {
+            document.title = titleText.substring(index) + " " + titleText.substring(0, index);
+            index = (index + 1) % titleText.length;
+        }
+
+        setInterval(scrollTitle, 500);
+    </script>
 </body>
 
 </html>
