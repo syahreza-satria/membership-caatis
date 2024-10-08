@@ -66,8 +66,11 @@
                 <h5 id="drawer-menu-name" class="fw-bolder"></h5>
                 <p id="drawer-menu-price" class="fw-bolder"></p>
                 <div class="mb-3">
-                    <label for="orderNote" class="form-label">Catatan</label>
-                    <textarea class="form-control" id="orderNote" rows="3"></textarea>
+                    <label for="orderNote" class="form-label">Notes</label>
+                    <div class="textarea-wrapper">
+                        <i class="bi bi-journal-plus"></i>
+                        <textarea class="form-control notes" id="orderNote" rows="1" placeholder="Tambah catatan..."></textarea>
+                    </div>
                 </div>
             </div>
             <hr class="divider"/>
@@ -118,6 +121,11 @@
             let basket = @json(Session::get('basket', []));
             let currentItem = null;
             let qty = 1;
+
+            document.getElementById('orderNote').addEventListener('input', function() {
+                this.style.height = 'auto';  // Reset the height first
+                this.style.height = (this.scrollHeight) + 'px';  // Set the height based on scrollHeight
+            });
 
             document.querySelectorAll('.tambah-menu').forEach(button => {
                 button.addEventListener('click', function() {
