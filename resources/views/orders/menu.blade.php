@@ -41,7 +41,7 @@
                                 {{ number_format($menu['variants'][0]['price'], 0, ',', '.') }}</p>
                             <div class="order-controls" data-name="{{ $menu['name'] }}"
                                 data-price="{{ $menu['variants'][0]['price'] }}" data-category-id="{{ $menu['category_id'] }}"
-                                data-category-name="{{ $menu['category_name'] }}">
+                                data-category-name="{{ $menu['category_name'] }}" data-image="https://pos.lakesidefnb.group/storage/{{ $menu['image'] }}">
                                 <button class="font-10 fw-bold text-center tambah-menu"
                                     style="padding: 4px 12px; background-color: {{ $menu['is_active'] == 0 ? '#d3d3d3' : '#14b8a6' }}; color: white; border: none; border-radius: 20px; transition: background-color 0.3s;" {{ $menu['is_active'] == 0 ? 'disabled' : '' }}>
                                     Tambah
@@ -63,7 +63,8 @@
             style="border-top-left-radius: 20px; border-top-right-radius: 20px;">
             <div style="width: 32px; height: 2px; background: rgb(196, 196, 196); border-radius: 100px; margin: auto auto 16px; margin-top: 5px"></div>
             <div class="drawer-body flex-grow-1">
-                <h5 id="drawer-menu-name" class="fw-bolder"></h5>
+                <img src="" class="img-fluid rounded" id="drawer-menu-image" alt="Menu Image">
+                <h5 id="drawer-menu-name" class="fw-bolder mt-2"></h5>
                 <p id="drawer-menu-price" class="fw-bolder"></p>
                 <div class="mb-3">
                     <label for="orderNote" class="form-label">Notes</label>
@@ -133,6 +134,7 @@
                     const menuPrice = parseInt(this.parentElement.getAttribute('data-price'));
                     const categoryId = this.parentElement.getAttribute('data-category-id');
                     const categoryName = this.parentElement.getAttribute('data-category-name');
+                    const menuImage = this.parentElement.getAttribute('data-image');
 
                     // Set current item
                     currentItem = {
@@ -144,6 +146,7 @@
                     };
 
                     // Set modal content
+                    document.getElementById('drawer-menu-image').src = menuImage;
                     document.getElementById('drawer-menu-name').textContent = menuName;
                     document.getElementById('drawer-menu-price').textContent =
                         `Rp ${menuPrice.toLocaleString()}`;

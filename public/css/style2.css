@@ -233,7 +233,7 @@ form .button-sso {
 }
 
 .drawer-body {
-    padding: 1rem;
+    padding: 0 1rem;
     overflow-y: auto;
     flex-grow: 1;
 }
