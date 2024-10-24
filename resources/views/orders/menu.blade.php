@@ -61,7 +61,7 @@
         {{-- Modals --}}
         <div class="bottom-drawer d-flex flex-column" id="orderDrawer"
             style="border-top-left-radius: 20px; border-top-right-radius: 20px;">
-            <div style="width: 32px; height: 2px; background: rgb(196, 196, 196); border-radius: 100px; margin: auto auto 16px; margin-top: 5px"></div>
+            <div id="drawerHandle" style="width: 32px; height: 2px; background: rgb(196, 196, 196); border-radius: 100px; margin: auto auto 16px; margin-top: 5px"></div>
             <div class="drawer-body flex-grow-1">
                 <img src="" class="img-fluid rounded" id="drawer-menu-image" alt="Menu Image">
                 <h5 id="drawer-menu-name" class="fw-bolder mt-2"></h5>
@@ -120,6 +120,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             const backdrop = document.getElementById('backdrop');
             const orderDrawer = document.getElementById('orderDrawer');
+            const drawerHandle = document.getElementById('drawerHandle'); // The top area to detect touch
             let basket = @json(Session::get('basket', []));
             let currentItem = null;
             let qty = 1;
@@ -174,13 +175,13 @@
                 drawerOpen = false;
             }
 
-            // Touch events for swipe-to-close functionality
-            orderDrawer.addEventListener('touchstart', function(event) {
+            // Touch events for swipe-to-close functionality (on drawerHandle only)
+            drawerHandle.addEventListener('touchstart', function(event) {
                 startY = event.touches[0].clientY;
                 orderDrawer.style.transition = 'none'; // Disable smooth animation during dragging
             });
 
-            orderDrawer.addEventListener('touchmove', function(event) {
+            drawerHandle.addEventListener('touchmove', function(event) {
                 currentY = event.touches[0].clientY;
                 const deltaY = currentY - startY;
 
@@ -189,7 +190,7 @@
                 }
             });
 
-            orderDrawer.addEventListener('touchend', function() {
+            drawerHandle.addEventListener('touchend', function() {
                 const deltaY = currentY - startY;
 
                 if (deltaY > 100) { // Threshold for closing
@@ -312,6 +313,7 @@
                 hideDrawer(); // Hide drawer if backdrop is clicked
             });
         });
+
 
     </script>
 @endsection
