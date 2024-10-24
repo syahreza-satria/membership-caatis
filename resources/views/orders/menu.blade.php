@@ -195,7 +195,7 @@
             drawerHandle.addEventListener('touchend', function() {
                 const deltaY = currentY - startY;
 
-                if (deltaY > 100) { // Threshold for closing
+                if (deltaY > 300) { // Threshold for closing
                     hideDrawer();
                 } else {
                     showDrawer(); // Reset the drawer to fully open
