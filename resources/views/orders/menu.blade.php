@@ -61,7 +61,9 @@
         {{-- Modals --}}
         <div class="bottom-drawer d-flex flex-column" id="orderDrawer"
             style="border-top-left-radius: 20px; border-top-right-radius: 20px;">
-            <div id="drawerHandle" style="width: 32px; height: 2px; background: rgb(196, 196, 196); border-radius: 100px; margin: auto auto 16px; margin-top: 5px"></div>
+            <div id="drawerHandle" class="d-flex justify-content-center">
+                <div style="width: 32px; height: 2px; background: rgb(196, 196, 196); border-radius: 100px; margin: auto auto 16px; margin-top: 5px"></div>
+            </div>
             <div class="drawer-body flex-grow-1">
                 <img src="" class="img-fluid rounded" id="drawer-menu-image" alt="Menu Image">
                 <h5 id="drawer-menu-name" class="fw-bolder mt-2"></h5>
