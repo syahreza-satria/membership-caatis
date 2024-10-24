@@ -159,6 +159,7 @@
                     document.getElementById('orderDrawer').style.bottom = '0';
                     // Show backdrop
                     backdrop.style.display = 'block';
+                    document.body.style.overflow = 'hidden';
                 });
             });
 
@@ -208,9 +209,11 @@
 
                     // Hide backdrop
                     backdrop.style.display = 'none';
+                    document.body.style.overflow = '';
 
                     // Save basket to session
                     saveBasketToSession(basket);
+
                 } else {
                     console.error('Branch ID element not found');
                 }
@@ -301,6 +304,7 @@
                 document.getElementById('orderDrawer').style.bottom = '-100%';
                 // Hide backdrop
                 backdrop.style.display = 'none';
+                document.body.style.overflow = '';
             });
         });
     </script>
