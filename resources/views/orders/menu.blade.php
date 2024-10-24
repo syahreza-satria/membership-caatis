@@ -119,13 +119,16 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const backdrop = document.getElementById('backdrop');
+            const orderDrawer = document.getElementById('orderDrawer');
             let basket = @json(Session::get('basket', []));
             let currentItem = null;
             let qty = 1;
 
+            let startY, currentY, drawerOpen = false;
+
             document.getElementById('orderNote').addEventListener('input', function() {
-                this.style.height = 'auto';  // Reset the height first
-                this.style.height = (this.scrollHeight) + 'px';  // Set the height based on scrollHeight
+                this.style.height = 'auto';  
+                this.style.height = (this.scrollHeight) + 'px';  
             });
 
             document.querySelectorAll('.tambah-menu').forEach(button => {
@@ -136,7 +139,6 @@
                     const categoryName = this.parentElement.getAttribute('data-category-name');
                     const menuImage = this.parentElement.getAttribute('data-image');
 
-                    // Set current item
                     currentItem = {
                         menu_name: menuName,
                         menu_price: menuPrice,
@@ -145,22 +147,56 @@
                         quantity: 1
                     };
 
-                    // Set modal content
                     document.getElementById('drawer-menu-image').src = menuImage;
                     document.getElementById('drawer-menu-name').textContent = menuName;
-                    document.getElementById('drawer-menu-price').textContent =
-                        `Rp ${menuPrice.toLocaleString()}`;
-                    document.getElementById('drawer-total-price').textContent =
-                        `Rp ${menuPrice.toLocaleString()}`;
+                    document.getElementById('drawer-menu-price').textContent = `Rp ${menuPrice.toLocaleString()}`;
+                    document.getElementById('drawer-total-price').textContent = `Rp ${menuPrice.toLocaleString()}`;
                     document.getElementById('orderNote').value = '';
                     document.getElementById('qtyInput').value = 1;
 
-                    // Show drawer
-                    document.getElementById('orderDrawer').style.bottom = '0';
-                    // Show backdrop
-                    backdrop.style.display = 'block';
-                    document.body.style.overflow = 'hidden';
+                    showDrawer(); // Show drawer when menu is clicked
                 });
+            });
+
+            function showDrawer() {
+                orderDrawer.style.transition = 'bottom 0.3s ease';
+                orderDrawer.style.bottom = '0';
+                backdrop.style.display = 'block';
+                document.body.style.overflow = 'hidden'; // Disable scroll
+                drawerOpen = true;
+            }
+
+            function hideDrawer() {
+                orderDrawer.style.transition = 'bottom 0.3s ease';
+                orderDrawer.style.bottom = '-100%';
+                backdrop.style.display = 'none';
+                document.body.style.overflow = ''; // Enable scroll
+                drawerOpen = false;
+            }
+
+            // Touch events for swipe-to-close functionality
+            orderDrawer.addEventListener('touchstart', function(event) {
+                startY = event.touches[0].clientY;
+                orderDrawer.style.transition = 'none'; // Disable smooth animation during dragging
+            });
+
+            orderDrawer.addEventListener('touchmove', function(event) {
+                currentY = event.touches[0].clientY;
+                const deltaY = currentY - startY;
+
+                if (deltaY > 0) { // Move only if dragging downwards
+                    orderDrawer.style.bottom = `-${deltaY}px`;
+                }
+            });
+
+            orderDrawer.addEventListener('touchend', function() {
+                const deltaY = currentY - startY;
+
+                if (deltaY > 100) { // Threshold for closing
+                    hideDrawer();
+                } else {
+                    showDrawer(); // Reset the drawer to fully open
+                }
             });
 
             document.getElementById('decreaseQty').addEventListener('click', function() {
@@ -183,39 +219,18 @@
                 qty = 1;
                 currentItem.note = document.getElementById('orderNote').value;
 
-                // Dapatkan branch_id dari elemen hidden input atau elemen lain
                 const branchIdElement = document.getElementById('branchId');
 
                 if (branchIdElement) {
                     let branch_id = branchIdElement.value;
-
-                    // Tambahkan branch_id ke sessionStorage
                     sessionStorage.setItem('branch_id', branch_id);
-
-                    // Tambahkan branch_id ke currentItem jika diperlukan
                     currentItem.branch_id = branch_id;
-
-                    // Log branch_id untuk memastikan sudah ada
-                    console.log('Branch ID:', branch_id);
-                    console.log('Current Item:', currentItem);
-
                     basket.push(currentItem);
 
-                    // Update basket button
                     updateBasketButton();
 
-                    // Hide drawer
-                    document.getElementById('orderDrawer').style.bottom = '-100%';
-
-                    // Hide backdrop
-                    backdrop.style.display = 'none';
-                    document.body.style.overflow = '';
-
-                    // Save basket to session
+                    hideDrawer(); // Hide drawer after adding item
                     saveBasketToSession(basket);
-
-                } else {
-                    console.error('Branch ID element not found');
                 }
             });
 
@@ -247,31 +262,27 @@
             }
 
             function saveBasketToSession(basket) {
-                // Dapatkan branch_id dari sessionStorage
                 let branch_id = sessionStorage.getItem('branch_id');
 
                 fetch('/order/save-basket', {
-                        method: 'POST',
-                        body: JSON.stringify({
-                            basket: basket,
-                            branch_id: branch_id
-                        }),
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
-                                'content')
-                        }
-                    }).then(response => {
-                        if (response.ok) {
-                            return response.json();
-                        } else {
-                            console.error('Error in saving basket:', response);
-                        }
-                    })
-                    .then(data => {
-                        console.log('Save basket response:', data);
-                    })
-                    .catch(error => console.error('Error:', error));
+                    method: 'POST',
+                    body: JSON.stringify({
+                        basket: basket,
+                        branch_id: branch_id
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    }
+                }).then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        console.error('Error in saving basket:', response);
+                    }
+                }).then(data => {
+                    console.log('Save basket response:', data);
+                }).catch(error => console.error('Error:', error));
             }
 
             document.getElementById('show-basket').addEventListener('click', function() {
@@ -280,32 +291,27 @@
                 formData.append('orderDetails', orderDetails);
 
                 fetch('/order/add-to-cart', {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
-                                .getAttribute('content')
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            window.location.href = data.redirect;
-                        }
-                    })
-                    .catch(error => console.error('Error:', error));
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.href = data.redirect;
+                    }
+                })
+                .catch(error => console.error('Error:', error));
             });
 
-            // Initialize basket button on page load
             updateBasketButton();
 
             backdrop.addEventListener('click', function() {
-                // Hide drawer
-                document.getElementById('orderDrawer').style.bottom = '-100%';
-                // Hide backdrop
-                backdrop.style.display = 'none';
-                document.body.style.overflow = '';
+                hideDrawer(); // Hide drawer if backdrop is clicked
             });
         });
+
     </script>
 @endsection

@@ -234,7 +234,8 @@ form .button-sso {
 
 .drawer-body {
     padding: 0 1rem;
-    overflow-y: auto;
+    overflow: hidden auto;
+    scrollbar-width: none;
     flex-grow: 1;
 }
 
