@@ -1,7 +1,7 @@
 {{-- Navbar Start --}}
 <nav class="navbar background-secondary sticky-top" style="z-index: 9;">
     <div class="container">
-        <a class="navbar-brand" href="/">
+        <a class="navbar-brand" href="{{ Auth::check() ? '/reward' : '/' }}">
             <img src="/img/lakesidefnb-white.png" alt="lakesidefnb" height="20">
         </a>
         <div class="btn-group">
@@ -10,7 +10,7 @@
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
                 <li>
-                    <a href="/" class="dropdown-item text-decoration-none font-black">Beranda</a>
+                    <a href="/reward" class="dropdown-item text-decoration-none font-black">Beranda</a>
                 </li>
                 <li>
                     <a href="/branch" class="dropdown-item text-decoration-none font-black">Pembelian</a>
