@@ -118,6 +118,7 @@
 
 
 @section('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const backdrop = document.getElementById('backdrop');
@@ -263,6 +264,16 @@
                     document.getElementById('basket-button').style.display = 'none';
                 }
             }
+
+            document.getElementById('basket-button').addEventListener('click', function() {
+                Swal.fire({
+                title: "Ups, kamu belum login",
+                text: "kamu harus login untuk melanjutkan proses checkout",
+                icon: "info"
+                }).then(() => {
+                    window.location.href = '/login';
+                });
+            });
 
             function saveBasketToSession(basket) {
                 let branch_id = sessionStorage.getItem('branch_id');
