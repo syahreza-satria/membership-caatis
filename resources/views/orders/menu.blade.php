@@ -41,7 +41,7 @@
                                 {{ number_format($menu['variants'][0]['price'], 0, ',', '.') }}</p>
                             <div class="order-controls" data-name="{{ $menu['name'] }}"
                                 data-price="{{ $menu['variants'][0]['price'] }}" data-category-id="{{ $menu['category_id'] }}"
-                                data-category-name="{{ $menu['category_name'] }}">
+                                data-category-name="{{ $menu['category_name'] }}" data-image="https://pos.lakesidefnb.group/storage/{{ $menu['image'] }}">
                                 <button class="font-10 fw-bold text-center tambah-menu"
                                     style="padding: 4px 12px; background-color: {{ $menu['is_active'] == 0 ? '#d3d3d3' : '#14b8a6' }}; color: white; border: none; border-radius: 20px; transition: background-color 0.3s;" {{ $menu['is_active'] == 0 ? 'disabled' : '' }}>
                                     Tambah
@@ -61,9 +61,12 @@
         {{-- Modals --}}
         <div class="bottom-drawer d-flex flex-column" id="orderDrawer"
             style="border-top-left-radius: 20px; border-top-right-radius: 20px;">
-            <div style="width: 32px; height: 2px; background: rgb(196, 196, 196); border-radius: 100px; margin: auto auto 16px; margin-top: 5px"></div>
+            <div id="drawerHandle" class="d-flex justify-content-center">
+                <div style="width: 32px; height: 2px; background: rgb(196, 196, 196); border-radius: 100px; margin: auto auto 16px; margin-top: 5px"></div>
+            </div>
             <div class="drawer-body flex-grow-1">
-                <h5 id="drawer-menu-name" class="fw-bolder"></h5>
+                <img src="" class="img-fluid rounded" id="drawer-menu-image" alt="Menu Image">
+                <h5 id="drawer-menu-name" class="fw-bolder mt-2"></h5>
                 <p id="drawer-menu-price" class="fw-bolder"></p>
                 <div class="mb-3">
                     <label for="orderNote" class="form-label">Notes</label>
@@ -115,16 +118,21 @@
 
 
 @section('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const backdrop = document.getElementById('backdrop');
+            const orderDrawer = document.getElementById('orderDrawer');
+            const drawerHandle = document.getElementById('drawerHandle'); // The top area to detect touch
             let basket = @json(Session::get('basket', []));
             let currentItem = null;
             let qty = 1;
 
+            let startY, currentY, drawerOpen = false;
+
             document.getElementById('orderNote').addEventListener('input', function() {
-                this.style.height = 'auto';  // Reset the height first
-                this.style.height = (this.scrollHeight) + 'px';  // Set the height based on scrollHeight
+                this.style.height = 'auto';  
+                this.style.height = (this.scrollHeight) + 'px';  
             });
 
             document.querySelectorAll('.tambah-menu').forEach(button => {
@@ -133,8 +141,8 @@
                     const menuPrice = parseInt(this.parentElement.getAttribute('data-price'));
                     const categoryId = this.parentElement.getAttribute('data-category-id');
                     const categoryName = this.parentElement.getAttribute('data-category-name');
+                    const menuImage = this.parentElement.getAttribute('data-image');
 
-                    // Set current item
                     currentItem = {
                         menu_name: menuName,
                         menu_price: menuPrice,
@@ -143,20 +151,56 @@
                         quantity: 1
                     };
 
-                    // Set modal content
+                    document.getElementById('drawer-menu-image').src = menuImage;
                     document.getElementById('drawer-menu-name').textContent = menuName;
-                    document.getElementById('drawer-menu-price').textContent =
-                        `Rp ${menuPrice.toLocaleString()}`;
-                    document.getElementById('drawer-total-price').textContent =
-                        `Rp ${menuPrice.toLocaleString()}`;
+                    document.getElementById('drawer-menu-price').textContent = `Rp ${menuPrice.toLocaleString()}`;
+                    document.getElementById('drawer-total-price').textContent = `Rp ${menuPrice.toLocaleString()}`;
                     document.getElementById('orderNote').value = '';
                     document.getElementById('qtyInput').value = 1;
 
-                    // Show drawer
-                    document.getElementById('orderDrawer').style.bottom = '0';
-                    // Show backdrop
-                    backdrop.style.display = 'block';
+                    showDrawer(); // Show drawer when menu is clicked
                 });
+            });
+
+            function showDrawer() {
+                orderDrawer.style.transition = 'bottom 0.3s ease';
+                orderDrawer.style.bottom = '0';
+                backdrop.style.display = 'block';
+                document.body.style.overflow = 'hidden'; // Disable scroll
+                drawerOpen = true;
+            }
+
+            function hideDrawer() {
+                orderDrawer.style.transition = 'bottom 0.3s ease';
+                orderDrawer.style.bottom = '-100%';
+                backdrop.style.display = 'none';
+                document.body.style.overflow = ''; // Enable scroll
+                drawerOpen = false;
+            }
+
+            // Touch events for swipe-to-close functionality (on drawerHandle only)
+            drawerHandle.addEventListener('touchstart', function(event) {
+                startY = event.touches[0].clientY;
+                orderDrawer.style.transition = 'none'; // Disable smooth animation during dragging
+            });
+
+            drawerHandle.addEventListener('touchmove', function(event) {
+                currentY = event.touches[0].clientY;
+                const deltaY = currentY - startY;
+
+                if (deltaY > 0) { // Move only if dragging downwards
+                    orderDrawer.style.bottom = `-${deltaY}px`;
+                }
+            });
+
+            drawerHandle.addEventListener('touchend', function() {
+                const deltaY = currentY - startY;
+
+                if (deltaY > 300) { // Threshold for closing
+                    hideDrawer();
+                } else {
+                    showDrawer(); // Reset the drawer to fully open
+                }
             });
 
             document.getElementById('decreaseQty').addEventListener('click', function() {
@@ -179,37 +223,18 @@
                 qty = 1;
                 currentItem.note = document.getElementById('orderNote').value;
 
-                // Dapatkan branch_id dari elemen hidden input atau elemen lain
                 const branchIdElement = document.getElementById('branchId');
 
                 if (branchIdElement) {
                     let branch_id = branchIdElement.value;
-
-                    // Tambahkan branch_id ke sessionStorage
                     sessionStorage.setItem('branch_id', branch_id);
-
-                    // Tambahkan branch_id ke currentItem jika diperlukan
                     currentItem.branch_id = branch_id;
-
-                    // Log branch_id untuk memastikan sudah ada
-                    console.log('Branch ID:', branch_id);
-                    console.log('Current Item:', currentItem);
-
                     basket.push(currentItem);
 
-                    // Update basket button
                     updateBasketButton();
 
-                    // Hide drawer
-                    document.getElementById('orderDrawer').style.bottom = '-100%';
-
-                    // Hide backdrop
-                    backdrop.style.display = 'none';
-
-                    // Save basket to session
+                    hideDrawer(); // Hide drawer after adding item
                     saveBasketToSession(basket);
-                } else {
-                    console.error('Branch ID element not found');
                 }
             });
 
@@ -240,32 +265,38 @@
                 }
             }
 
+            document.getElementById('basket-button').addEventListener('click', function() {
+                Swal.fire({
+                title: "Ups, kamu belum login",
+                text: "kamu harus login untuk melanjutkan proses checkout",
+                icon: "info"
+                }).then(() => {
+                    window.location.href = '/login';
+                });
+            });
+
             function saveBasketToSession(basket) {
-                // Dapatkan branch_id dari sessionStorage
                 let branch_id = sessionStorage.getItem('branch_id');
 
                 fetch('/order/save-basket', {
-                        method: 'POST',
-                        body: JSON.stringify({
-                            basket: basket,
-                            branch_id: branch_id
-                        }),
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
-                                'content')
-                        }
-                    }).then(response => {
-                        if (response.ok) {
-                            return response.json();
-                        } else {
-                            console.error('Error in saving basket:', response);
-                        }
-                    })
-                    .then(data => {
-                        console.log('Save basket response:', data);
-                    })
-                    .catch(error => console.error('Error:', error));
+                    method: 'POST',
+                    body: JSON.stringify({
+                        basket: basket,
+                        branch_id: branch_id
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    }
+                }).then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        console.error('Error in saving basket:', response);
+                    }
+                }).then(data => {
+                    console.log('Save basket response:', data);
+                }).catch(error => console.error('Error:', error));
             }
 
             document.getElementById('show-basket').addEventListener('click', function() {
@@ -274,31 +305,28 @@
                 formData.append('orderDetails', orderDetails);
 
                 fetch('/order/add-to-cart', {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
-                                .getAttribute('content')
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            window.location.href = data.redirect;
-                        }
-                    })
-                    .catch(error => console.error('Error:', error));
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.href = data.redirect;
+                    }
+                })
+                .catch(error => console.error('Error:', error));
             });
 
-            // Initialize basket button on page load
             updateBasketButton();
 
             backdrop.addEventListener('click', function() {
-                // Hide drawer
-                document.getElementById('orderDrawer').style.bottom = '-100%';
-                // Hide backdrop
-                backdrop.style.display = 'none';
+                hideDrawer(); // Hide drawer if backdrop is clicked
             });
         });
+
+
     </script>
 @endsection

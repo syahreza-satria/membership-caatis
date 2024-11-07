@@ -8,6 +8,10 @@ use App\Http\Controllers\RewardController;
 use App\Http\Controllers\HistoryController;
 use App\Http\Controllers\DashboardController;
 
+Route::get('/', [OrderController::class, 'showBranch'])->name('showBranch');
+Route::get('/order/menu/{outletId}', [OrderController::class, 'pembelian'])->name('order.menu');
+Route::post('/order/add-to-cart', [OrderController::class, 'addToCart'])->name('order.addToCart');
+
 // USER LOGIN AND AUTHENTICATION
 Route::get('/register', [UserController::class, 'create'])->name('register')->middleware('guest');
 Route::post('/users', [UserController::class, 'store'])->name('register.store');
@@ -18,22 +22,19 @@ Route::post('/users/sso', [UserController::class, 'authenticateSso'])->name('log
 Route::post('/logout', [UserController::class, 'logout'])->name('logout')->middleware('auth');
 
 
-
 Route::middleware('auth')->group(function () {
     // REWARDS STUFF
-    Route::get('/', [RewardController::class, 'index'])->name('reward');
+    Route::get('/reward', [RewardController::class, 'index'])->name('reward');
     Route::get('/rewards/{reward}', [RewardController::class, 'show'])->name('reward.show');
     Route::post('/rewards/redeem/{reward}', [RewardController::class, 'redeemPoints'])->name('reward.redeemPoints');
-
+    
     // HISTORY
     Route::get('/history', [HistoryController::class, 'index'])->name('history');
     Route::get('/history/rewards', [HistoryController::class, 'rewardHistory'])->name('history.rewards');
     Route::get('/history/orders', [HistoryController::class, 'orderHistory'])->name('history.orders');
-
+    
     // ORDER
     Route::get('/branch', [OrderController::class, 'showBranch'])->name('showBranch');
-    Route::get('/order/menu/{outletId}', [OrderController::class, 'pembelian'])->name('order.menu');
-    Route::post('/order/add-to-cart', [OrderController::class, 'addToCart'])->name('order.addToCart');
     Route::get('/cart/{outletId}', [OrderController::class, 'showCart'])->name('showCart');
     Route::post('/update-cart', [OrderController::class, 'updateCart'])->name('updateCart');
     Route::post('/cart/remove-item', [OrderController::class, 'removeItem'])->name('removeItem');
