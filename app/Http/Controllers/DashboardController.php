@@ -17,6 +17,13 @@ class DashboardController extends Controller
     public function index()
     {
         $totalUsers = User::count();
+        $today = Carbon::today();
+        $code = VerificationCode::where('date', $today)->first();
+
+        if (!$code) {
+            $code = $this->generateCode();
+        }
+
         return view('dashboards.index', compact('totalUsers'));
     }
 
@@ -39,14 +46,17 @@ class DashboardController extends Controller
     {
         $today = Carbon::today();
 
-        $verificationCode = VerificationCode::firstOrCreate(
-            ['date' => $today],
-            ['code' => str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT)]
-        );
+        $verificationCode = VerificationCode::firstOrNew(['date' => $today]);
+
+        if (!$verificationCode->exists) {
+            $verificationCode->code = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
+            $verificationCode->date = $today;
+            $verificationCode->save();
+        }
 
         return $verificationCode->code;
     }
-
+    
     public function rewards()
     {
         $rewards = Reward::orderBy('created_at', 'desc')->get();
