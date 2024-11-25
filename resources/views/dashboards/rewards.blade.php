@@ -2,22 +2,23 @@
 
 @section('container')
     <div class="container mt-3">
-        <h2>Kelola Rewards</h2>
+        <h2 class="text-danger">Rewards</h2>
+
         <hr>
         <div class="container mt-4 shadow p-4 bg-white rounded">
-            <h1 class="mb-4">Tambahkan Rewards</h1>
+            <h1 class="mb-4 text-danger">Tambahkan Rewards</h1>
             <form action="{{ route('dashboard.rewards.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="form-group">
-                    <label for="title">Reward Title</label>
+                    <label for="title">Judul</label>
                     <input type="text" class="form-control" id="title" name="title" required>
                 </div>
                 <div class="form-group">
-                    <label for="product_points">Reward Points</label>
+                    <label for="product_points">Poin</label>
                     <input type="number" class="form-control" id="product_points" name="product_points" required>
                 </div>
                 <div class="form-group">
-                    <label for="description">Description</label>
+                    <label for="description">Deskripsi</label>
                     <textarea class="form-control" id="description" name="description" required></textarea>
                 </div>
                 <div class="form-group">
@@ -25,7 +26,7 @@
                     <input type="file" class="form-control" id="image" name="image">
                 </div>
                 <div class="form-group">
-                    <label for="branch_id">Branch</label>
+                    <label for="branch_id">Cabang</label>
                     <select class="form-control" id="branch_id" name="branch_id" required>
                         <option value="">Pilih Cabang</option>
                         @foreach ($branches as $branch)
@@ -33,10 +34,14 @@
                         @endforeach
                     </select>
                 </div>
-                <button type="submit" class="btn btn-primary mt-3">Add Reward</button>
+                <div class="float-end">
+                    <button type="submit" class="btn btn-danger mt-3">Tambah Reward</button>
+                </div>
+
             </form>
+
             @if ($rewards->isNotEmpty())
-                <h2 class="mt-4">Existing Rewards</h2>
+                <h2 class="mt-4 text-danger">Rewards yang telah ada</h2>
                 <ul class="list-group">
                     @foreach ($rewards as $reward)
                         <li class="list-group-item d-flex justify-content-between align-items-center">

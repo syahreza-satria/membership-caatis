@@ -2,7 +2,7 @@
 
 @section('container')
     <div class="container mt-3">
-        <h2>Edit Rewards</h2>
+        <h2 class="text-danger">Rewards</h2>
         <hr>
         <div class="container mt-3">
             <hr>
@@ -12,17 +12,17 @@
                     @csrf
                     @method('PUT')
                     <div class="form-group">
-                        <label for="title">Reward Title</label>
+                        <label for="title">Judul</label>
                         <input type="text" class="form-control" id="title" name="title" value="{{ $reward->title }}"
                             required>
                     </div>
                     <div class="form-group">
-                        <label for="product_points">Reward Points</label>
+                        <label for="product_points">Poin</label>
                         <input type="number" class="form-control" id="product_points" name="product_points"
                             value="{{ $reward->product_points }}" required>
                     </div>
                     <div class="form-group">
-                        <label for="description">Description</label>
+                        <label for="description">Deskripsi</label>
                         <textarea class="form-control" id="description" name="description" required>{{ $reward->description }}</textarea>
                     </div>
                     <div class="form-group">
@@ -33,7 +33,10 @@
                                 width="100" class="mt-2">
                         @endif
                     </div>
-                    <button type="submit" class="btn btn-primary mt-3">Update Reward</button>
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="btn btn-danger mt-3">Update Reward</button>
+                    </div>
+
                 </form>
             </div>
         </div>

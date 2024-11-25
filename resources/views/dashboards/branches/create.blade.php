@@ -2,20 +2,20 @@
 
 @section('container')
     <div class="container mt-3">
-        <h2>Add New Branch</h2>
+        <h2 class="mb-4 text-danger">Tambah Cabang</h2>
         <hr>
         <form action="{{ route('dashboard.branches.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
             <div class="mb-3">
-                <label for="name" class="form-label">Branch Name</label>
+                <label for="name" class="form-label">Nama Cabang</label>
                 <input type="text" class="form-control" id="name" name="name" required>
             </div>
             <div class="mb-3">
-                <label for="address" class="form-label">Branch Address</label>
+                <label for="address" class="form-label">Alamat</label>
                 <input type="text" class="form-control" id="address" name="address">
             </div>
             <div class="mb-3">
-                <label for="logo" class="form-label">Branch Logo</label>
+                <label for="logo" class="form-label">Logo</label>
                 <input type="file" class="form-control" id="logo" name="logo">
             </div>
             <div class="mb-3">
@@ -30,8 +30,9 @@
                 <label for="outletId" class="form-label">Outlet ID</label>
                 <input type="text" class="form-control" id="outletId" name="outletId">
             </div>
-            <button type="submit" class="btn btn-primary">Add Branch</button>
-            <a href="{{ route('dashboard.branches') }}" class="btn btn-secondary">Back to Manage Branches</a>
+            <button type="submit" class="btn btn-danger" style="float: right;">Tambah Cabang</button>
+                <a href="{{ route('dashboard.branches') }}" style="float:right;" class="btn btn-secondary">Kembali</a>
+
         </form>
     </div>
 @endsection

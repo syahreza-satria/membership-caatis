@@ -1,0 +1,28 @@
+body {
+    font-family: 'Nunito', sans-serif;
+}
+.btn-red {
+    background-color: red;
+    border-color: red;
+    color: white;
+}
+.text-red {
+    color: red;
+}
+
+/* Ensure the sidebar takes full height */
+.sidebar {
+    height: 100vh;
+    position: sticky;
+    top: 0;
+}
+
+.offcanvas-md {
+    height: 100%; /* For offcanvas */
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        display: none; /* Hide sidebar on small screens */
+    }
+}

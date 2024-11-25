@@ -2,7 +2,7 @@
 
 @section('container')
     <div class="container mt-3">
-        <h2>Edit Branch</h2>
+        <h2 class="mb-4 text-danger">Edit Cabang</h2>
         <hr>
         @if (session('success'))
             <div class="alert alert-success">{{ session('success') }}</div>
@@ -11,15 +11,15 @@
             @csrf
             @method('PUT')
             <div class="mb-3">
-                <label for="name" class="form-label">Branch Name</label>
+                <label for="name" class="form-label">Nama Cabang</label>
                 <input type="text" class="form-control" id="name" name="name" value="{{ $branch->name }}" required>
             </div>
             <div class="mb-3">
-                <label for="address" class="form-label">Branch Address</label>
+                <label for="address" class="form-label">Alamat</label>
                 <input type="text" class="form-control" id="address" name="address" value="{{ $branch->address }}">
             </div>
             <div class="mb-3">
-                <label for="logo" class="form-label">Branch Logo</label>
+                <label for="logo" class="form-label">Logo</label>
                 <input type="file" class="form-control" id="logo" name="logo">
                 @if ($branch->logo)
                     <div class="mt-2">
@@ -39,8 +39,11 @@
                 <label for="outletId" class="form-label">Outlet ID</label>
                 <input type="text" class="form-control" id="outletId" name="outletId" value="{{ $branch->outletId }}">
             </div>
-            <button type="submit" class="btn btn-primary">Update Branch</button>
-            <a href="{{ route('dashboard.branches') }}" class="btn btn-secondary">Back to Manage Branches</a>
+            <div class="d-flex justify-content-end gap-2">
+                <a href="{{ route('dashboard.branches') }}" class="btn btn-secondary">Kembali</a>
+                <button type="submit" class="btn btn-danger">Perbarui Cabang</button>
+            </div>
+
         </form>
     </div>
 @endsection
