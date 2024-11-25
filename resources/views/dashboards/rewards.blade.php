@@ -41,43 +41,47 @@
             </form>
 
             @if ($rewards->isNotEmpty())
-                <h2 class="mt-4 text-danger">Rewards yang telah ada</h2>
-                <ul class="list-group">
-                    @foreach ($rewards as $reward)
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
-                                <h5>{{ $reward->title }}</h5>
-                                <p class="fw-semibold">Cabang: {{ $reward->branch->name }}</p>
-                                <p>{{ $reward->description }}</p>
-                                <p class="fw-semibold">{{ $reward->product_points }} points</p>
-                                @if ($reward->image_path)
-                                    <img src="{{ asset('storage/' . $reward->image_path) }}" alt="{{ $reward->title }}"
-                                        width="100" class="{{ $reward->is_active ? '' : 'grayscale' }} rounded-4">
-                                @else
-                                    <p class="fw-semibold mt-3">Tidak Memiliki Foto</p>
-                                @endif
-                            </div>
-                            <div class="d-flex">
-                                <button type="button"
-                                    class="btn me-2 toggle-status-btn {{ $reward->is_active ? 'btn-success' : 'btn-secondary' }}"
-                                    data-url="{{ route('dashboard.rewards.toggle', $reward->id) }}">
-                                    {!! $reward->is_active ? '<i class="bi bi-eye-fill"></i>' : '<i class="bi bi-eye-slash-fill"></i>' !!}
-                                </button>
+    <h2 class="mt-4 text-danger">Rewards yang telah ada</h2>
+    <ul class="list-group">
+        @foreach ($rewards as $reward)
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    <h5>{{ $reward->title }}</h5>
+                    <p class="fw-semibold">Cabang: {{ $reward->branch->name }}</p>
+                    <p>{{ $reward->description }}</p>
+                    <p class="fw-semibold">{{ $reward->product_points }} points</p>
+                </div>
+                <div class="d-flex flex-column align-items-end">
+                    @if ($reward->image_path)
+                        <img src="{{ asset('storage/' . $reward->image_path) }}" alt="{{ $reward->title }}"
+                            width="100" class="{{ $reward->is_active ? '' : 'grayscale' }} rounded-4 mb-2">
+                    @else
+                        <p class="fw-semibold mb-2">Tidak Memiliki Foto</p>
+                    @endif
+                    <div class="d-flex">
+                        <button type="button"
+                            class="btn me-2 toggle-status-btn {{ $reward->is_active ? 'btn-success' : 'btn-secondary' }}"
+                            data-url="{{ route('dashboard.rewards.toggle', $reward->id) }}">
+                            {!! $reward->is_active ? '<i class="bi bi-eye-fill"></i>' : '<i class="bi bi-eye-slash-fill"></i>' !!}
+                        </button>
 
-                                <a href="{{ route('dashboard.rewards.edit', $reward->id) }}" class="btn btn-info me-2"><i
-                                        class="bi bi-pencil-fill text-white"></i>
-                                </a>
-                                <button type="button" class="btn btn-danger delete-btn"
-                                    data-url="{{ route('dashboard.rewards.destroy', $reward->id) }}">
-                                    <i class="bi bi-trash3-fill"></i>
-                                </button>
-                            </div>
-                        </li>
-                    @endforeach
-                </ul>
-            @else
-                <p class="mt-4">Belum ada reward yang ditambahkan.</p>
-            @endif
+                        <a href="{{ route('dashboard.rewards.edit', $reward->id) }}" class="btn btn-info me-2"><i
+                                class="bi bi-pencil-fill text-white"></i>
+                        </a>
+                        <button type="button" class="btn btn-danger delete-btn"
+                            data-url="{{ route('dashboard.rewards.destroy', $reward->id) }}">
+                            <i class="bi bi-trash3-fill"></i>
+                        </button>
+                    </div>
+                </div>
+            </li>
+        @endforeach
+    </ul>
+@else
+    <p class="mt-4">Belum ada reward yang ditambahkan.</p>
+@endif
+
+
         </div>
     </div>
 
