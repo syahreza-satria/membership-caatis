@@ -2,31 +2,19 @@
 
 @section('container')
     <div class="container mt-3">
-        <h2>Total User</h2>
+        <h2 class="fs-1 text-red fw-bold">Kode Verifikasi</h2>
         <hr>
-        <div class="container mt-4 shadow p-4 bg-white rounded">
-            <h1 class="mb-4">Total Users: {{ $totalUsers }}</h1>
-            @if ($users->isEmpty())
-                <p>No users available.</p>
+        <div class="container text-center mt-5 bg-white p-4 mt-4 rounded shadow">
+            <h1 class="fs-1 text-red" style="font-weight: 800">Kode Verifikasi</h1>
+            <p class="fs-6 text-secondary">Ini adalah kode verifikasi yang dihasilkan untuk hari ini:</p>
+            @if ($code)
+                <h2 class="fs-1" style="font-weight: 800">{{ $code->code }}</h2>
+                <p class="fs-6 text-secondary mb-0">Kode verifikasi ini hanya berlaku pada tanggal: {{ $code->date }}
+                </p>
+                <p class="fs-6 text-secondary">kode verifikasi akan berubah tiap hari
+                </p>
             @else
-                <div class="table-responsive">
-                    <table class="table table-bordered">
-                        <thead>
-                            <tr>
-                                <th>Full Name</th>
-                                <th>Email</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($users as $user)
-                                <tr>
-                                    <td>{{ $user->fullname }}</td>
-                                    <td>{{ $user->email }}</td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
+                <p class="text-secondary">Tidak ada kode verifikasi untuk hari ini.</p>
             @endif
         </div>
     </div>
