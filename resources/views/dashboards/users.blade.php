@@ -1,12 +1,11 @@
 @extends('dashboards.layouts.main')
 
 @section('container')
-    <div class="container mt-3">
-        <h2 style="color: red;">Users</h2>
-
+    <div class="container mt-4">
+        <h2 class="text-red fw-bold">Pengguna</h2>
         <hr>
-        <div class="container mt-4 shadow p-4 bg-white rounded">
-            <h1 class="mb-4">Total Users: {{ $totalUsers }}</h1>
+        <div class="container mt-3 shadow p-4 bg-white rounded">
+            <h3 class="fw-bold font-24">Total Users: {{ $totalUsers }}</h3>
             @if ($users->isEmpty())
                 <p>No users available.</p>
             @else
@@ -16,6 +15,7 @@
                             <tr>
                                 <th>Nama Lengkap</th>
                                 <th>E-mail</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -23,6 +23,7 @@
                                 <tr>
                                     <td>{{ $user->fullname }}</td>
                                     <td>{{ $user->email }}</td>
+                                    <td></td>
                                 </tr>
                             @endforeach
                         </tbody>
