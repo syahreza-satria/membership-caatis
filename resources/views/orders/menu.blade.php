@@ -1,15 +1,21 @@
 @extends('layouts.layout-main')
 
 @section('pemesanan')
-    <div id="backdrop" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 10;"></div>
+    <div id="backdrop"
+        style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 10;">
+    </div>
 
     <section class="px-2 py-4 mx-auto" style="max-width: 420px">
         <div class="d-flex text-dark text-start ms-3">
-            <img src="{{ Storage::url($branch->logo) }}" style="border: 1px solid #14B8A6" class="rounded-3" alt="{{ $branch->name }}" height="70" width="70">
+            <img src="{{ Storage::url($branch->logo) }}" style="border: 1px solid #14B8A6" class="rounded-3"
+                alt="{{ $branch->name }}" height="70" width="70">
             <div class="ms-2">
                 <h3 class="font-16 fw-bold mb-2">{{ $branch->name }}</h3>
-                <p class="m-0" style="font-size:13px;"><i class="bi bi-geo-alt-fill me-1" style="color: #ffc800"></i>{{ $branch->address }}</p>
-                <span class="badge rounded-pill bg-primary" style="background: linear-gradient(90deg, rgb(33, 107, 196) 0%, rgb(0, 110, 242) 100%);"><i class="bi bi-check-lg"></i> Verified Outlet</span>
+                <p class="m-0" style="font-size:13px;"><i class="bi bi-geo-alt-fill me-1"
+                        style="color: #ffc800"></i>{{ $branch->address }}</p>
+                <span class="badge rounded-pill bg-primary"
+                    style="background: linear-gradient(90deg, rgb(33, 107, 196) 0%, rgb(0, 110, 242) 100%);"><i
+                        class="bi bi-check-lg"></i> Verified Outlet</span>
             </div>
         </div>
     </section>
@@ -22,7 +28,8 @@
             <div class="mb-3" style="border-top: 1px dashed #d5d5d5;"></div>
             <div class="px-2">
                 @foreach ($menus as $menu)
-                    <div class="w-100 mb-4 p-3 rounded shadow-sm bg-white" style="transition: transform 0.3s, box-shadow 0.3s;">
+                    <div class="w-100 mb-4 p-3 rounded shadow-sm bg-white"
+                        style="transition: transform 0.3s, box-shadow 0.3s;">
                         <div class="mb-1 d-flex justify-content-between align-items-center">
                             <div>
                                 <h3 class="font-14 mb-1 fw-semibold">{{ $menu['name'] }}</h3>
@@ -37,13 +44,17 @@
                         </div>
                         <hr>
                         <div class="d-flex justify-content-between align-items-center">
-                            <p class="font-12 fw-semibold mb-0" style="color: {{ $menu['is_active'] == 0 ? '#d3d3d3' : '#14b8a6' }};">Rp
+                            <p class="font-12 fw-semibold mb-0"
+                                style="color: {{ $menu['is_active'] == 0 ? '#d3d3d3' : '#14b8a6' }};">Rp
                                 {{ number_format($menu['variants'][0]['price'], 0, ',', '.') }}</p>
                             <div class="order-controls" data-name="{{ $menu['name'] }}"
-                                data-price="{{ $menu['variants'][0]['price'] }}" data-category-id="{{ $menu['category_id'] }}"
-                                data-category-name="{{ $menu['category_name'] }}" data-image="https://pos.lakesidefnb.group/storage/{{ $menu['image'] }}">
+                                data-price="{{ $menu['variants'][0]['price'] }}"
+                                data-category-id="{{ $menu['category_id'] }}"
+                                data-category-name="{{ $menu['category_name'] }}"
+                                data-image="https://pos.lakesidefnb.group/storage/{{ $menu['image'] }}">
                                 <button class="font-10 fw-bold text-center tambah-menu"
-                                    style="padding: 4px 12px; background-color: {{ $menu['is_active'] == 0 ? '#d3d3d3' : '#14b8a6' }}; color: white; border: none; border-radius: 20px; transition: background-color 0.3s;" {{ $menu['is_active'] == 0 ? 'disabled' : '' }}>
+                                    style="padding: 4px 12px; background-color: {{ $menu['is_active'] == 0 ? '#d3d3d3' : '#14b8a6' }}; color: white; border: none; border-radius: 20px; transition: background-color 0.3s;"
+                                    {{ $menu['is_active'] == 0 ? 'disabled' : '' }} id="tombol-tambah">
                                     Tambah
                                 </button>
                             </div>
@@ -62,7 +73,9 @@
         <div class="bottom-drawer d-flex flex-column" id="orderDrawer"
             style="border-top-left-radius: 20px; border-top-right-radius: 20px;">
             <div id="drawerHandle" class="d-flex justify-content-center">
-                <div style="width: 32px; height: 2px; background: rgb(196, 196, 196); border-radius: 100px; margin: auto auto 16px; margin-top: 5px"></div>
+                <div
+                    style="width: 32px; height: 2px; background: rgb(196, 196, 196); border-radius: 100px; margin: auto auto 16px; margin-top: 5px">
+                </div>
             </div>
             <div class="drawer-body flex-grow-1">
                 <img src="" class="img-fluid rounded" id="drawer-menu-image" alt="Menu Image">
@@ -76,7 +89,7 @@
                     </div>
                 </div>
             </div>
-            <hr class="divider"/>
+            <hr class="divider" />
             <div class="drawer-footer" style="padding-top: 10px;">
                 <div class="d-flex justify-content-between mb-3">
                     <h6>Jumlah</h6>
@@ -87,9 +100,10 @@
                         <button class="btn btn-outline-secondary btn-sm rounded-pill ms-2" id="increaseQty">+</button>
                     </div>
                 </div>
-                
+
                 <input type="hidden" id="branchId" value="{{ $branch_id }}">
-                <button type="button" class="btn btn-primary rounded-pill w-100" style="font-size: 0.9rem"id="addToCartButton">
+                <button type="button" class="btn btn-primary rounded-pill w-100"
+                    style="font-size: 0.9rem"id="addToCartButton">
                     <div class="d-flex justify-content-between">
                         <span>+ Keranjang</span>
                         <span id="drawer-total-price">Rp 0</span>
@@ -115,15 +129,13 @@
     </main>
 @endsection
 
-
-
 @section('scripts')
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const backdrop = document.getElementById('backdrop');
             const orderDrawer = document.getElementById('orderDrawer');
-            const drawerHandle = document.getElementById('drawerHandle'); // The top area to detect touch
+            const drawerHandle = document.getElementById('drawerHandle');
             let basket = @json(Session::get('basket', []));
             let currentItem = null;
             let qty = 1;
@@ -131,36 +143,57 @@
             let startY, currentY, drawerOpen = false;
 
             document.getElementById('orderNote').addEventListener('input', function() {
-                this.style.height = 'auto';  
-                this.style.height = (this.scrollHeight) + 'px';  
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
             });
 
             document.querySelectorAll('.tambah-menu').forEach(button => {
                 button.addEventListener('click', function() {
-                    const menuName = this.parentElement.getAttribute('data-name');
-                    const menuPrice = parseInt(this.parentElement.getAttribute('data-price'));
-                    const categoryId = this.parentElement.getAttribute('data-category-id');
-                    const categoryName = this.parentElement.getAttribute('data-category-name');
-                    const menuImage = this.parentElement.getAttribute('data-image');
+                    const isAuthenticated = @json(Auth::check());
 
-                    currentItem = {
-                        menu_name: menuName,
-                        menu_price: menuPrice,
-                        category_id: categoryId,
-                        category_name: categoryName,
-                        quantity: 1
-                    };
+                    if (isAuthenticated) {
+                        const menuName = this.parentElement.getAttribute('data-name');
+                        const menuPrice = parseInt(this.parentElement.getAttribute('data-price'));
+                        const categoryId = this.parentElement.getAttribute('data-category-id');
+                        const categoryName = this.parentElement.getAttribute('data-category-name');
+                        const menuImage = this.parentElement.getAttribute('data-image');
 
-                    document.getElementById('drawer-menu-image').src = menuImage;
-                    document.getElementById('drawer-menu-name').textContent = menuName;
-                    document.getElementById('drawer-menu-price').textContent = `Rp ${menuPrice.toLocaleString()}`;
-                    document.getElementById('drawer-total-price').textContent = `Rp ${menuPrice.toLocaleString()}`;
-                    document.getElementById('orderNote').value = '';
-                    document.getElementById('qtyInput').value = 1;
+                        currentItem = {
+                            menu_name: menuName,
+                            menu_price: menuPrice,
+                            category_id: categoryId,
+                            category_name: categoryName,
+                            quantity: 1
+                        };
 
-                    showDrawer(); // Show drawer when menu is clicked
+                        document.getElementById('drawer-menu-image').src = menuImage;
+                        document.getElementById('drawer-menu-name').textContent = menuName;
+                        document.getElementById('drawer-menu-price').textContent =
+                            `Rp ${menuPrice.toLocaleString()}`;
+                        document.getElementById('drawer-total-price').textContent =
+                            `Rp ${menuPrice.toLocaleString()}`;
+                        document.getElementById('orderNote').value = '';
+                        document.getElementById('qtyInput').value = 1;
+
+                        showDrawer(); // Show drawer when menu is clicked
+                    } else {
+                        Swal.fire({
+                            title: "Yahh, kamu belum login 🥲",
+                            text: "Kamu harus login terlebih dahulu untuk melanjutkan proses pemesanan",
+                            icon: "info",
+                            showCancelButton: true,
+                            confirmButtonColor: "#3085d6",
+                            cancelButtonColor: "#d33",
+                            confirmButtonText: "OK, saya login dulu!"
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                window.location.href = '/login';
+                            }
+                        });
+                    }
                 });
             });
+
 
             function showDrawer() {
                 orderDrawer.style.transition = 'bottom 0.3s ease';
@@ -265,19 +298,6 @@
                 }
             }
 
-            const isAuthenticated = @json(Auth::check());
-            if (!isAuthenticated) {
-                document.getElementById('basket-button').addEventListener('click', function() {
-                    Swal.fire({
-                        title: "Ups, kamu belum login",
-                        text: "kamu harus login untuk melanjutkan proses checkout",
-                        icon: "info"
-                    }).then(() => {
-                        window.location.href = '/login';
-                    });
-                });
-            }
-            
             function saveBasketToSession(basket) {
                 let branch_id = sessionStorage.getItem('branch_id');
 
@@ -289,7 +309,8 @@
                     }),
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                            'content')
                     }
                 }).then(response => {
                     if (response.ok) {
@@ -308,19 +329,20 @@
                 formData.append('orderDetails', orderDetails);
 
                 fetch('/order/add-to-cart', {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        window.location.href = data.redirect;
-                    }
-                })
-                .catch(error => console.error('Error:', error));
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
+                                .getAttribute('content')
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            window.location.href = data.redirect;
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
             });
 
             updateBasketButton();
@@ -329,7 +351,5 @@
                 hideDrawer(); // Hide drawer if backdrop is clicked
             });
         });
-
-
     </script>
 @endsection

@@ -21,6 +21,7 @@ class OrderController extends Controller
     public function showBranch()
     {
         $branches = Branch::all();
+        session()->forget('basket');
 
         return view('orders.branches', [
             'banner' => 'PEMBELIAN',
