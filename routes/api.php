@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\api\VerificationCodeController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -16,4 +17,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
+});
+
+Route::prefix('verification')->group(function(){
+    Route::get('/get-code', [VerificationCodeController::class, 'getCode']);
 });
