@@ -1,20 +1,34 @@
 @extends('dashboards.layouts.main')
 
 @section('container')
-    <div class="container mt-3">
-        <h2 class="fs-1 text-red fw-bold">Kode Verifikasi</h2>
+    <div class="container mt-4">
+        <h2 class="text-red fw-bold">Pengguna</h2>
         <hr>
-        <div class="container text-center mt-5 bg-white p-4 mt-4 rounded shadow">
-            <h1 class="fs-1 text-red" style="font-weight: 800">Kode Verifikasi</h1>
-            <p class="fs-6 text-secondary">Ini adalah kode verifikasi yang dihasilkan untuk hari ini:</p>
-            @if ($code)
-                <h2 class="fs-1" style="font-weight: 800">{{ $code->code }}</h2>
-                <p class="fs-6 text-secondary mb-0">Kode verifikasi ini hanya berlaku pada tanggal: {{ $code->date }}
-                </p>
-                <p class="fs-6 text-secondary">kode verifikasi akan berubah tiap hari
-                </p>
+        <div class="container mt-3 shadow p-4 bg-white rounded">
+            <h3 class="fw-bold font-24">Total Users: {{ $totalUsers }}</h3>
+            @if ($users->isEmpty())
+                <p>No users available.</p>
             @else
-                <p class="text-secondary">Tidak ada kode verifikasi untuk hari ini.</p>
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Nama Lengkap</th>
+                                <th>E-mail</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($users as $user)
+                                <tr>
+                                    <td>{{ $user->fullname }}</td>
+                                    <td>{{ $user->email }}</td>
+                                    <td></td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
             @endif
         </div>
     </div>
