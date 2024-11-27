@@ -265,16 +265,19 @@
                 }
             }
 
-            document.getElementById('basket-button').addEventListener('click', function() {
-                Swal.fire({
-                title: "Ups, kamu belum login",
-                text: "kamu harus login untuk melanjutkan proses checkout",
-                icon: "info"
-                }).then(() => {
-                    window.location.href = '/login';
+            const isAuthenticated = @json(Auth::check());
+            if (!isAuthenticated) {
+                document.getElementById('basket-button').addEventListener('click', function() {
+                    Swal.fire({
+                        title: "Ups, kamu belum login",
+                        text: "kamu harus login untuk melanjutkan proses checkout",
+                        icon: "info"
+                    }).then(() => {
+                        window.location.href = '/login';
+                    });
                 });
-            });
-
+            }
+            
             function saveBasketToSession(basket) {
                 let branch_id = sessionStorage.getItem('branch_id');
 
