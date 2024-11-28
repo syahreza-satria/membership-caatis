@@ -4,6 +4,7 @@
         <a class="navbar-brand" href="{{ Auth::check() ? '/reward' : '/' }}">
             <img src="/img/lakesidefnb-white.png" alt="lakesidefnb" height="20">
         </a>
+       @if (Auth::check())
         <div class="btn-group">
             <button type="button" class="btn background-secondary" data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="bi bi-list" style="font-size: 30px; color: #fff "></i>
@@ -31,6 +32,7 @@
 
         </div>
     </div>
+    @endif
 </nav>
 {{-- Navbar End --}}
 
