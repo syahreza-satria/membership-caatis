@@ -11,7 +11,7 @@ class VerificationCodeController extends Controller
     public function getCode()
     {
         try {
-            
+
             $lastCode = DB::table('verification_codes')
                 ->latest('created_at')
                 ->first();
@@ -40,4 +40,12 @@ class VerificationCodeController extends Controller
             ], 500);
         }
     }
+
+    // public function testCode()
+    // {
+    //     // Logika untuk mendapatkan atau mengenerate kode verifikasi
+    //     return response()->json([
+    //         'code' => '123456',  // Contoh: Kode verifikasi statis
+    //     ]);
+    // }
 }

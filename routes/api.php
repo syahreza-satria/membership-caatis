@@ -22,3 +22,6 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 Route::prefix('verification')->group(function(){
     Route::get('/get-code', [VerificationCodeController::class, 'getCode']);
 });
+
+
+// Route::get('/test-code', [VerificationCodeController::class, 'testCode']);

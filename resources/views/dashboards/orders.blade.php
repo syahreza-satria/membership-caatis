@@ -88,7 +88,7 @@
         @else
             <table class="table table-striped">
                 <thead>
-                    <tr>
+                    <tr class="font-12">
                         <th>ID</th>
                         <th>Nama Lengkap</th>
                         <th>Cabang</th>
@@ -101,11 +101,11 @@
                 <tbody>
                     @foreach ($orders as $order)
                         <tr>
-                            <td>{{ $order->id }}</td>
-                            <td>{{ $order->user->fullname }}</td>
-                            <td>{{ $order->branch->name }}</td>
-                            <td>{{ number_format($order->total_price, 0, ',', '.') }}</td>
-                            <td>
+                            <td class="font-12 align-middle">{{ $order->id }}</td>
+                            <td class="font-12 align-middle">{{ $order->user->fullname }}</td>
+                            <td class="font-12 align-middle">{{ $order->branch->name }}</td>
+                            <td class="font-12 align-middle">{{ number_format($order->total_price, 0, ',', '.') }}</td>
+                            <td class="font-12 align-middle">
                                 @if ($order->status == 'success')
                                     <span class="fw-bold text-success">{{ $order->status }}</span>
                                 @elseif ($order->status == 'pending')
@@ -114,9 +114,9 @@
                                     <span class="fw-bold text-danger">{{ $order->status }}</span>
                                 @endif
                             </td>
-                            <td>{{ $order->created_at }}</td>
-                            <td>
-                                <button class="btn btn-info order-details-button"
+                            <td class="font-12 align-middle">{{ $order->created_at }}</td>
+                            <td class="align-middle">
+                                <button class="btn btn-info order-details-button font-12 text-white "
                                     data-order="{{ json_encode($order->orderDetails) }}"
                                     data-total-price="{{ $order->total_price }}">View</button>
                             </td>
