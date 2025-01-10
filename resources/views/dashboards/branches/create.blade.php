@@ -32,6 +32,13 @@
                     <label for="outletId" class="form-label">Outlet ID</label>
                     <input type="text" class="form-control" id="outletId" name="outletId">
                 </div>
+                <div class="mb-3">
+                    <label for="order_type" class="form-label">Tipe Orderan</label>
+                    <select class="form-control" id="order_type" name="order_type">
+                        <option value="dinein">Dine-in</option>
+                        <option value="takeaway">Takeaway</option>
+                    </select>
+                </div>
                 <div class="text-end">
                     <a href="{{ route('dashboard.branches') }}" class="btn btn-secondary fw-bold">Kembali</a>
                     <button type="submit" class="btn btn-danger background-red fw-bold">Tambah Cabang</button>

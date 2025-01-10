@@ -246,6 +246,7 @@ class DashboardController extends Controller
             'api_url' => 'nullable|string|max:255',
             'api_token' => 'nullable|string|max:255',
             'outletId' => 'nullable|string|max:255',
+            'order_type' => 'nullable|string|max:255'
         ]);
 
         if ($request->hasFile('logo')) {
@@ -271,6 +272,7 @@ class DashboardController extends Controller
             'api_url' => 'nullable|string|max:255',
             'api_token' => 'nullable|string|max:255',
             'outletId' => 'nullable|string|max:255',
+            'order_type' => 'nullable|string|max:255'
         ]);
 
         if ($request->hasFile('logo')) {

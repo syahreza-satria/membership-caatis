@@ -412,9 +412,12 @@ class OrderController extends Controller
             'identity' => '-',
             'outlet_id' => $branch->outletId,
             'order_payment' => 3,
+            'order_type' => $branch->order_type,
             'order_totals' => $totalPrice,
             'order_details' => $formattedOrderDetails,
         ];
+
+        Log::info($orderData);
 
         // Kirim data ke API teman
         $this->sendOrderToFriendApi($orderData, $branch->api_url, $branch->api_token);

@@ -44,6 +44,13 @@
                     <input type="text" class="form-control" id="outletId" name="outletId"
                         value="{{ $branch->outletId }}">
                 </div>
+                <div class="mb-2">
+                    <label for="order_type" class="form-label">Tipe Orderan</label>
+                    <select class="form-control" id="order_type" name="order_type">
+                        <option value="dinein">Dine-in</option>
+                        <option value="takeaway">Takeaway</option>
+                    </select>
+                </div>
                 <div class="d-flex justify-content-end gap-2 mt-3">
                     <a href="{{ route('dashboard.branches') }}" class="btn btn-secondary fw-bold">Kembali</a>
                     <button type="submit" class="btn btn-danger background-red text-white fw-bold">Perbarui Cabang</button>
