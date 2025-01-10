@@ -56,7 +56,7 @@ class DashboardController extends Controller
 
         return $verificationCode->code;
     }
-    
+
     public function rewards()
     {
         $rewards = Reward::orderBy('created_at', 'desc')->get();
@@ -150,11 +150,11 @@ class DashboardController extends Controller
     public function destroyReward($id)
     {
         $reward = Reward::findOrFail($id);
-        
+
         if ($reward->image_path) {
             Storage::disk('public')->delete($reward->image_path);
         }
-        
+
         $reward->delete();
 
         return redirect()->route('dashboard.rewards')->with('success', 'Reward deleted successfully.');
@@ -172,7 +172,7 @@ class DashboardController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'search' => 'nullable|string|max:255',
-            'branch_id' => 'nullable|integer|exists:branches,id'
+            'branch_id' => 'nullable|string|exists:branches,id'
         ]);
 
         if ($validator->fails()) {
@@ -183,23 +183,30 @@ class DashboardController extends Controller
 
         $search = $request->input('search');
         $branch_id = $request->input('branch_id');
-        
+        $outletId = null;
+        if ($branch_id) {
+            $outletId = Branch::where('id', $branch_id)->value('outletId');
+        }
+
         $orders = Order::with('user', 'orderDetails', 'branch')
                         ->when($search, function ($query, $search) {
                             return $query->whereHas('user', function ($query) use ($search) {
                                 $query->where('fullname', 'like', "%{$search}%");
                             });
                         })
-                        ->when($branch_id, function ($query, $branch_id) {
-                            return $query->where('branch_id', $branch_id);
+                        ->when($outletId, function ($query, $outletId) {
+                            return $query->whereHas('branch', function ($branchQuery) use ($outletId) {
+                                $branchQuery->where('outletId', $outletId);
+                            });
                         })
                         ->orderBy('created_at', 'desc')
                         ->get();
-        
+
         $branches = Branch::all();
 
         return view('dashboards.orders', compact('orders', 'search', 'branches', 'branch_id'));
     }
+
 
     public function searchOrders(Request $request)
     {
