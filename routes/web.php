@@ -27,12 +27,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/reward', [RewardController::class, 'index'])->name('reward');
     Route::get('/rewards/{reward}', [RewardController::class, 'show'])->name('reward.show');
     Route::post('/rewards/redeem/{reward}', [RewardController::class, 'redeemPoints'])->name('reward.redeemPoints');
-    
+
     // HISTORY
     Route::get('/history', [HistoryController::class, 'index'])->name('history');
     Route::get('/history/rewards', [HistoryController::class, 'rewardHistory'])->name('history.rewards');
     Route::get('/history/orders', [HistoryController::class, 'orderHistory'])->name('history.orders');
-    
+
     // ORDER
     Route::get('/branch', [OrderController::class, 'showBranch'])->name('showBranch');
     Route::get('/cart/{outletId}', [OrderController::class, 'showCart'])->name('showCart');
@@ -45,14 +45,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/order/save-basket', [OrderController::class, 'saveBasket'])->name('order.saveBasket');
     Route::post('/log-remove-item', [OrderController::class, 'logRemoveItem'])->name('logRemoveItem');
 });
-
- 
-
-// Route::get('/order/show-code', [OrderController::class, 'showCode'])->middleware('auth');
-// Route::post('/order/create', [OrderController::class, 'createOrder'])->name('order.create')->middleware('auth');
-// Route::get('/order/verification', [OrderController::class, 'inputKode'])->name('order.inputKode')->middleware('auth');
-// Route::post('/order/verify-code', [OrderController::class, 'verifyCode'])->name('order.verifyCode')->middleware('auth');
-// Route::get('/order/success', [OrderController::class, 'showSuccessPage'])->name('order.success')->middleware('auth');
 
 // DASHBOARD
 Route::middleware(['auth', 'admin'])->group(function () {
@@ -77,10 +69,3 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::put('/dashboard/branches/{branch}', [DashboardController::class, 'updateBranch'])->name('dashboard.branches.update');
     Route::delete('/dashboard/branches/{branch}', [DashboardController::class, 'destroyBranch'])->name('dashboard.branches.destroy');
 });
-
-
-// Route::get('/about', function(){
-//     return view('about',[
-//         'banner' => 'TENTANG KAMI'
-//     ]);
-// })->middleware('auth');

@@ -19,12 +19,16 @@ class DashboardController extends Controller
         $totalUsers = User::count();
         $today = Carbon::today();
         $code = VerificationCode::where('date', $today)->first();
+        $branches = Branch::all();
+        $orders = Order::all();
+        $users = User::all();
+        $rewards = Reward::all();
 
         if (!$code) {
             $code = $this->generateCode();
         }
 
-        return view('dashboards.index', compact('totalUsers'));
+        return view('dashboards.index', compact('totalUsers', 'code', 'branches', 'orders', 'users', 'rewards'));
     }
 
     public function verificationCodes()
@@ -172,7 +176,7 @@ class DashboardController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'search' => 'nullable|string|max:255',
-            'branch_id' => 'nullable|string|exists:branches,id'
+            'branch_id' => 'nullable|string|exists:branches,outletId' // Gunakan outletId
         ]);
 
         if ($validator->fails()) {
@@ -183,20 +187,20 @@ class DashboardController extends Controller
 
         $search = $request->input('search');
         $branch_id = $request->input('branch_id');
-        $outletId = null;
-        if ($branch_id) {
-            $outletId = Branch::where('id', $branch_id)->value('outletId');
-        }
 
         $orders = Order::with('user', 'orderDetails', 'branch')
                         ->when($search, function ($query, $search) {
-                            return $query->whereHas('user', function ($query) use ($search) {
-                                $query->where('fullname', 'like', "%{$search}%");
+                            return $query->where(function ($query) use ($search) {
+                                $query->whereHas('user', function ($subQuery) use ($search) {
+                                    $subQuery->where('fullname', 'like', "%{$search}%");
+                                })->orWhereHas('branch', function ($subQuery) use ($search) {
+                                    $subQuery->where('name', 'like', "%{$search}%");
+                                })->orWhere('total_price', 'like', "%{$search}%");
                             });
                         })
-                        ->when($outletId, function ($query, $outletId) {
-                            return $query->whereHas('branch', function ($branchQuery) use ($outletId) {
-                                $branchQuery->where('outletId', $outletId);
+                        ->when($branch_id, function ($query, $branch_id) {
+                            return $query->whereHas('branch', function ($subQuery) use ($branch_id) {
+                                $subQuery->where('outletId', $branch_id);
                             });
                         })
                         ->orderBy('created_at', 'desc')
@@ -207,18 +211,25 @@ class DashboardController extends Controller
         return view('dashboards.orders', compact('orders', 'search', 'branches', 'branch_id'));
     }
 
-
     public function searchOrders(Request $request)
     {
         $query = $request->input('query');
         $branch_id = $request->input('branch_id');
 
         $orders = Order::with('user', 'orderDetails', 'branch')
-            ->whereHas('user', function ($q) use ($query) {
-                $q->where('fullname', 'like', '%' . $query . '%');
+            ->where(function ($q) use ($query) {
+                if ($query) {
+                    $q->whereHas('user', function ($subQuery) use ($query) {
+                        $subQuery->where('fullname', 'like', "%{$query}%");
+                    })->orWhereHas('branch', function ($subQuery) use ($query) {
+                        $subQuery->where('name', 'like', "%{$query}%");
+                    })->orWhere('total_price', 'like', "%{$query}%");
+                }
             })
             ->when($branch_id, function ($q) use ($branch_id) {
-                $q->where('branch_id', $branch_id);
+                return $q->whereHas('branch', function ($subQuery) use ($branch_id) {
+                    $subQuery->where('outletId', $branch_id);
+                });
             })
             ->orderBy('created_at', 'desc')
             ->get();

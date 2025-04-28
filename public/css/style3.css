@@ -29,6 +29,10 @@
     background: linear-gradient(to bottom, #2dd4bf, #14b8a6);
 }
 
+.b-primary {
+    border: 2px solid var(--primary);
+}
+
 .grayscale {
     filter: grayscale(100%);
 }

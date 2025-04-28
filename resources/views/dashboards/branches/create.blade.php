@@ -1,49 +1,111 @@
 @extends('dashboards.layouts.main')
 
-@section('container')
-    <div class="container mt-4">
-        <h2 class="mb-3 text-red fw-bold">Cabang</h2>
-        <hr>
-        <div class="container mt-3 shadow p-4 bg-white rounded">
-            <h3 class="text-red fw-bold font-24 mb-2">Tambah Cabang</h3>
-            <form action="{{ route('dashboard.branches.store') }}" method="POST" enctype="multipart/form-data">
-                @csrf
-                <div class="mb-3">
-                    <label for="name" class="form-label">Nama Cabang</label>
-                    <input type="text" class="form-control" id="name" name="name" required>
+@section('content')
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Edit Cabang</h1>
+    </div>
+
+    <!-- Content Row -->
+    <div class="row">
+        <!-- Add Rewards -->
+        <div class="col-xl-12 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-lg font-weight-bold text-success text-uppercase mb-1">
+                                Tambah Cabang
+                            </div>
+                            <hr />
+                            <form action="{{ route('dashboard.branches.store') }}" method="POST"
+                                enctype="multipart/form-data">
+                                @csrf
+                                <div class="row">
+                                    <!-- Nama Cabang -->
+                                    <div class="col">
+                                        <div class="form-group">
+                                            <label for="name">Nama Cabang</label>
+                                            <input type="text" class="form-control" id="name" required
+                                                name="name" />
+                                        </div>
+                                    </div>
+                                    <!-- Alamat -->
+                                    <div class="col">
+                                        <div class="form-group">
+                                            <label for="address">Alamat</label>
+                                            <input type="text" class="form-control" id="address" name="address"
+                                                required />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <!-- API URL -->
+                                    <div class="col">
+                                        <div class="form-group">
+                                            <label for="api_url">API URL</label>
+                                            <input type="text" class="form-control" id="api_url" required
+                                                name="api_url" />
+                                        </div>
+                                    </div>
+                                    <!-- API Token -->
+                                    <div class="col">
+                                        <div class="form-group">
+                                            <label for="api_token">API Token</label>
+                                            <input type="text" class="form-control" id="api_token" name="api_token"
+                                                required />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <!-- Outlet -->
+                                    <div class="col">
+                                        <div class="form-group">
+                                            <label for="outletId">Outlet Id</label>
+                                            <input type="text" class="form-control" id="outletId" name="outletId"
+                                                required />
+                                        </div>
+                                    </div>
+                                    <div class="col">
+                                        <div class="form-group">
+                                            <label for="order_type">Tipe Orderan</label>
+                                            <select class="form-control" id="order_type" name="order_type">
+                                                <option value="">
+                                                    Dine-in / Takeaway</option>
+                                                <option value="dinein"
+                                                    {{ 'order_type', $branch ?? (('')->order_type ?? '' == 'dinein') ? 'selected' : '' }}>
+                                                    Dine-in</option>
+                                                <option value="takeaway",
+                                                    {{ old('order_type', $branch ?? (('')->order_type ?? '')) == 'takeaway' ? 'selected' : '' }}>
+                                                    Takeaway</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Logo -->
+                                <div class="d-flex">
+                                    <div class="form-group my-auto w-100">
+                                        <label for="logo">Gambar</label>
+                                        <div class="custom-file mb-3">
+                                            <input type="file" class="custom-file-input" id="logo" name="logo" />
+                                            <label class="custom-file-label" for="logo">Pilih
+                                                Gambar</label>
+                                            <div class="invalid-feedback">
+                                                Example invalid custom file feedback
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-end">
+                                    <a href="{{ route('dashboard.branches') }}" class="btn btn-secondary mr-2">Batalkan</a>
+                                    <button type="submit" class="btn btn-primary">
+                                        Tambah Cabang
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
                 </div>
-                <div class="mb-3">
-                    <label for="address" class="form-label">Alamat</label>
-                    <input type="text" class="form-control" id="address" name="address">
-                </div>
-                <div class="mb-3">
-                    <label for="logo" class="form-label">Logo</label>
-                    <input type="file" class="form-control" id="logo" name="logo">
-                </div>
-                <div class="mb-3">
-                    <label for="api_url" class="form-label">API URL</label>
-                    <input type="text" class="form-control" id="api_url" name="api_url">
-                </div>
-                <div class="mb-3">
-                    <label for="api_token" class="form-label">API Token</label>
-                    <input type="text" class="form-control" id="api_token" name="api_token">
-                </div>
-                <div class="mb-3">
-                    <label for="outletId" class="form-label">Outlet ID</label>
-                    <input type="text" class="form-control" id="outletId" name="outletId">
-                </div>
-                <div class="mb-3">
-                    <label for="order_type" class="form-label">Tipe Orderan</label>
-                    <select class="form-control" id="order_type" name="order_type">
-                        <option value="dinein">Dine-in</option>
-                        <option value="takeaway">Takeaway</option>
-                    </select>
-                </div>
-                <div class="text-end">
-                    <a href="{{ route('dashboard.branches') }}" class="btn btn-secondary fw-bold">Kembali</a>
-                    <button type="submit" class="btn btn-danger background-red fw-bold">Tambah Cabang</button>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 @endsection

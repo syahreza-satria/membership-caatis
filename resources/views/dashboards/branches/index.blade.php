@@ -1,64 +1,106 @@
 @extends('dashboards.layouts.main')
 
-@section('container')
-    <div class="container mt-4">
-        <h2 class="text-red font-32 fw-bold">Cabang</h2>
+@section('content')
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Cabang</h1>
+    </div>
 
-        <hr>
-        @if (session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
-        @endif
-        <a href="{{ route('dashboard.branches.create') }}"
-            class="btn btn-danger background-red text-white fw-bold mb-3">Tambahkan
-            Cabang</a>
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th style="color: #a52a2a">Cabang</th>
-                    <th style="color: #a52a2a">Alamat</th>
-                    <th style="color: #a52a2a">Logo</th>
-                    <th style="color: #a52a2a">API URL</th>
-                    <th style="color: #a52a2a">API Token</th>
-                    <th style="color: #a52a2a">Outlet ID</th>
-                    <th style="color: #a52a2a">Actions</th>
-                </tr>
-            </thead>
+    @if (session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
 
+    <!-- Content Row -->
+    <div class="row">
+        <div class="col-xl-12 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="d-flex justify-content-between mb-1">
+                                <h2 class="text-lg font-weight-bold text-warning my-auto text-uppercase">
+                                    Daftar cabang
+                                </h2>
+                                <a href="{{ route('dashboard.branches.create') }}" class="btn btn-primary"
+                                    style="font-size: small">
+                                    Tambah +
+                                </a>
+                            </div>
 
-            <tbody>
-                @foreach ($branches as $branch)
-                    <tr>
-                        <td class="text-secondary">{{ $branch->name }}</td>
-                        <td class="text-secondary">{{ $branch->address }}</td>
-                        <td class="d-flex justify-content-center align-items-center">
-                            @if ($branch->logo)
-                                <img src="{{ Storage::url($branch->logo) }}" alt="{{ $branch->name }}" width="60"
-                                    height="60" class="mx-auto my-auto">
-                            @endif
-                        </td>
-                        <td class="text-secondary">{{ $branch->api_url }}</td>
-                        <td class="text-secondary">{{ $branch->api_token }}</td>
-                        <td class="text-secondary">{{ $branch->outletId }}</td>
-                        <td>
-                            <!-- Edit Button -->
-                            <a href="{{ route('dashboard.branches.edit', $branch) }}" class="btn btn-warning"
-                                title="Edit">
-                                <i class="bi bi-pencil-fill text-white"></i>
-                            </a>
-
-                            <!-- Delete Button -->
-                            <form action="{{ route('dashboard.branches.destroy', $branch) }}" method="POST"
-                                class="d-inline">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-danger" title="Delete">
-                                    <i class="bi bi-trash-fill"></i>
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
+                            <hr />
+                            <div class="table-responsive">
+                                <table class="table table-striped bg-white">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col" class="align-middle">No</th>
+                                            <th scope="col" class="align-middle">Cabang</th>
+                                            <th scope="col" class="align-middle">Alamat</th>
+                                            <th scope="col" class="align-middle">Logo</th>
+                                            <th scope="col" class="align-middle">
+                                                Api URL
+                                            </th>
+                                            <th scope="col" class="align-middle">
+                                                Api Token
+                                            </th>
+                                            <th scope="col" class="align-middle">
+                                                Outlet ID
+                                            </th>
+                                            <th scope="col" class="align-middle">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach ($branches as $branch)
+                                            <tr>
+                                                <th scope="row" class="align-middle" style="font-size: small">
+                                                    1
+                                                </th>
+                                                <td class="align-middle" style="font-size: small">
+                                                    {{ $branch->name }}
+                                                </td>
+                                                <td class="align-middle" style="font-size: small">
+                                                    {{ $branch->address }}
+                                                </td>
+                                                <td class="align-middle">
+                                                    @if ($branch->logo)
+                                                        <img src="{{ Storage::url($branch->logo) }}"
+                                                            alt="{{ $branch->name }}" class="rounded" width="50"
+                                                            height="50" style="object-fit: cover" />
+                                                    @else
+                                                        <img src="http://placehold.co/100x100" alt="{{ $branch->name }}"
+                                                            class="rounded" width="50" height="50" />
+                                                    @endif
+                                                </td>
+                                                <td class="text-truncate align-middle" style="font-size: small">
+                                                    {{ $branch->api_url }}
+                                                </td>
+                                                <td class="text-truncate align-middle" style="font-size: small">
+                                                    {{ $branch->api_token }}
+                                                </td>
+                                                <td class="text-truncate align-middle" style="font-size: small">
+                                                    {{ $branch->outletId }}
+                                                </td>
+                                                <td class="text-truncate align-middle">
+                                                    <a href="{{ route('dashboard.branches.edit', $branch) }}"
+                                                        class="btn btn-warning">
+                                                        <i class="fas fa-pencil-ruler"></i>
+                                                    </a>
+                                                    <form action="{{ route('dashboard.branches.destroy', $branch) }}"
+                                                        method="post" class="d-inline">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="btn btn-danger" title="Delete">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 @endsection

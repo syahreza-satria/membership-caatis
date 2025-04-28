@@ -3,34 +3,45 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\Models\VerificationCode;
 use Carbon\Carbon;
+use App\Models\VerificationCode;
+use Illuminate\Support\Facades\Log;
 
 class ResetVerificationCode extends Command
 {
+    /**
+     * The name and signature of the console command.
+     *
+     * @var string
+     */
     protected $signature = 'verification:reset';
 
-    protected $description = 'Reset verification codes daily';
+    /**
+     * The console command description.
+     *
+     * @var string
+     */
+    protected $description = 'Reset and generate a new verification code every midnight.';
 
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
+    /**
+     * Execute the console command.
+     */
     public function handle()
     {
         $today = Carbon::today();
+        $code = VerificationCode::where('date', $today)->first();
 
-        $verificationCode = VerificationCode::firstOrNew(['date' => $today]);
+        if (!$code) {
+            VerificationCode::create([
+                'code' => str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT),
+                'date' => $today,
+            ]);
 
-        if (!$verificationCode->exists) {
-            $verificationCode->code = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
-            $verificationCode->date = $today;
-            $verificationCode->save();
-
-            $this->info("Verification code for {$today} has been generated.");
+            Log::info('Verification code generated successfully at ' . now());
+            $this->info('Verification code generated successfully.');
         } else {
-            $this->info("Verification code for {$today} already exists.");
+            Log::info('Verification code already exists for today.');
+            $this->info('Verification code already exists.');
         }
     }
 }

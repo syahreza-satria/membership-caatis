@@ -1,277 +1,239 @@
 @extends('dashboards.layouts.main')
 
-@section('styles')
-    <style>
-        .popup {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%) scale(0.5);
-            background-color: #fff;
-            padding: 20px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
-            opacity: 0;
-        }
-
-        .popup.show {
-            display: block;
-            transform: translate(-50%, -50%) scale(1);
-            opacity: 1;
-        }
-
-        .popup-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .popup-body {
-            margin-top: 10px;
-        }
-
-        .popup-body ul {
-            list-style-type: none;
-            padding-left: 0;
-        }
-
-        .popup-body ul li {
-            padding: 5px 0;
-            border-bottom: 1px solid #ddd;
-        }
-
-        .popup-body ul li:last-child {
-            border-bottom: none;
-        }
-
-        .close-btn {
-            cursor: pointer;
-            font-size: 20px;
-        }
-    </style>
-@endsection
-
-@section('container')
-    <div class="container mt-3">
-        <h2>Orders</h2>
-        <hr>
-
-        <!-- Form Pencarian -->
-        <div class="mb-4">
-            <div class="input-group">
-                <input type="text" id="search" class="form-control" placeholder="Cari menggunakan nama lengkap"
-                    value="{{ old('search') }}">
-            </div>
-        </div>
-
-        <!-- Filter by Branch -->
-        <div class="mb-4">
-            <div class="btn-group" role="group">
-                <a href="{{ url()->current() }}"
-                    class="btn btn-outline-primary {{ request('branch_id') == '' ? 'active' : '' }}">
-                    Semua Cabang
-                </a>
-                @foreach ($branches as $branch)
-                    <a href="{{ url()->current() }}?branch_id={{ $branch->id }}"
-                        class="btn btn-outline-primary {{ request('branch_id') == $branch->id ? 'active' : '' }}">
-                        {{ $branch->name }}
-                    </a>
-                @endforeach
-            </div>
-        </div>
-
-
-        @if ($orders->isEmpty())
-            <p>No orders found.</p>
-        @else
-            <table class="table table-striped">
-                <thead>
-                    <tr class="font-12">
-                        <th>ID</th>
-                        <th>Nama Lengkap</th>
-                        <th>Cabang</th>
-                        <th>Total Harga</th>
-                        <th>Status</th>
-                        <th>Pesanan Dibuat</th>
-                        <th>Details</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($orders as $order)
-                        <tr>
-                            <td class="font-12 align-middle">{{ $order->id }}</td>
-                            <td class="font-12 align-middle">{{ $order->user->fullname }}</td>
-                            <td class="font-12 align-middle">{{ $order->branch->name }}</td>
-                            <td class="font-12 align-middle">{{ number_format($order->total_price, 0, ',', '.') }}</td>
-                            <td class="font-12 align-middle">
-                                @if ($order->status == 'success')
-                                    <span class="fw-bold text-success">{{ $order->status }}</span>
-                                @elseif ($order->status == 'pending')
-                                    <span class="fw-bold text-warning">{{ $order->status }}</span>
-                                @else
-                                    <span class="fw-bold text-danger">{{ $order->status }}</span>
-                                @endif
-                            </td>
-                            <td class="font-12 align-middle">{{ $order->created_at }}</td>
-                            <td class="align-middle">
-                                <button class="btn btn-info order-details-button font-12 text-white "
-                                    data-order="{{ json_encode($order->orderDetails) }}"
-                                    data-total-price="{{ $order->total_price }}">View</button>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        @endif
+@section('content')
+    <!-- Page Heading -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Pesanan</h1>
     </div>
 
-    <!-- Popup untuk detail pesanan -->
-    <div id="orderDetailsPopup" class="popup">
-        <div class="popup-header">
-            <h5 class="popup-title">Order Details</h5>
-            <span id="closePopup" class="close-btn">&times;</span>
-        </div>
-        <div class="popup-body">
-            <ul id="order-details-list">
-                <!-- Order details will be loaded here -->
-            </ul>
-            <p id="total-points" class="mt-3"><strong>Total Points Earned:</strong> <span></span></p>
+    <!-- Content Row -->
+    <div class="row">
+        <div class="col-xl-12 col-md-6 mb-4">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col">
+                            <div class="mb-1 d-flex flex-wrap justify-content-between">
+                                <h2 class="text-lg font-weight-bold text-danger text-uppercase">
+                                    Daftar Pesanan
+                                </h2>
+                            </div>
+                            <hr />
+
+                            <!-- Filter -->
+                            <div class="row mb-4">
+                                <!-- Search Input -->
+                                <form action="{{ route('dashboard.orders.search') }}" method="GET" class="col-md-4">
+                                    <div class="input-group">
+                                        <input type="text" name="search" id="search" class="form-control"
+                                            placeholder="Cari berdasarkan nama, cabang, pesanan"
+                                            value="{{ old('search', $search) }}">
+                                    </div>
+                                </form>
+
+                                <!-- Branch Filter Buttons -->
+                                <div class="col-md-8">
+                                    <div class="d-flex flex-wrap justify-content-end">
+                                        <a href="{{ request()->url() }}"
+                                            class="btn btn-outline-primary m-1 {{ request('branch_id') ? '' : 'active' }}">
+                                            Semua Cabang
+                                        </a>
+                                        @foreach ($branches as $branch)
+                                            <a href="{{ request()->fullUrlWithQuery(['branch_id' => $branch->outletId]) }}"
+                                                class="btn btn-outline-primary m-1 {{ request('branch_id') == $branch->outletId ? 'active' : '' }}">
+                                                {{ $branch->name }}
+                                            </a>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+
+                            @if ($orders->isEmpty())
+                                <h5 class="text-center my-5">Tidak ditemukan adanya pesanan</h5>
+                            @else
+                                <div class="table-responsive">
+                                    <table class="table table-striped bg-white">
+                                        <thead>
+                                            <tr>
+                                                <th scope="col" class="align-middle">No</th>
+                                                <th scope="col" class="align-middle">Nama</th>
+                                                <th scope="col" class="align-middle">Cabang</th>
+                                                <th scope="col" class="align-middle">Total Harga</th>
+                                                <th scope="col" class="align-middle">Status</th>
+                                                <th scope="col" class="align-middle">Waktu</th>
+                                                <th scope="col" class="align-middle">Detail</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach ($orders as $index => $order)
+                                                <tr>
+                                                    <th scope="row" class="align-middle" style="font-size: small">
+                                                        {{ $index + 1 }}
+                                                    </th>
+                                                    <td class="align-middle" style="font-size: small">
+                                                        {{ $order->user->fullname }}
+                                                    </td>
+                                                    <td class="align-middle" style="font-size: small">
+                                                        {{ $order->branch->name }}
+                                                    </td>
+                                                    <td class="align-middle" style="font-size: small">
+                                                        {{ number_format($order->total_price, 0, ',', '.') }}
+                                                    </td>
+                                                    <td class="align-middle" style="font-size: small">
+                                                        @if ($order->status == 'success')
+                                                            <span class="fw-bold text-success">{{ $order->status }}</span>
+                                                        @elseif ($order->status == 'pending')
+                                                            <span class="fw-bold text-warning">{{ $order->status }}</span>
+                                                        @else
+                                                            <span class="fw-bold text-danger">{{ $order->status }}</span>
+                                                        @endif
+                                                    </td>
+                                                    <td class="align-middle" style="font-size: small">
+                                                        <span
+                                                            class="text-primary">{{ \Carbon\Carbon::parse($order->created_at)->format('H:i') }}</span>
+                                                        <br>
+                                                        {{ \Carbon\Carbon::parse($order->created_at)->format('d-m-Y') }}
+                                                    </td>
+                                                    <td class="align-middle" style="font-size: small">
+                                                        <button class="btn btn-info order-details-button font-12 text-white"
+                                                            data-order="{{ json_encode($order->orderDetails) }}"
+                                                            data-total-price="{{ $order->total_price }}" id="myBtn">
+                                                            <i class="fas fa-info-circle"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
+
+    <!-- Modal Detail Pesanan -->
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="modalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Detail Pesanan</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <!-- Order Details List -->
+                    <ul id="order-details-list" class="list-group">
+                        <!-- Data akan dimasukkan lewat JavaScript -->
+                    </ul>
+                    <p id="total-price" class="mt-3"><strong>Total Harga:</strong> <span>Rp 0</span></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 @endsection
 
 @section('scripts')
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            function formatCurrency(value) {
-                return 'Rp' + new Intl.NumberFormat('id-ID', {
-                    minimumFractionDigits: 0
-                }).format(value);
-            }
+        document.addEventListener("DOMContentLoaded", function() {
+            // Event delegation untuk tombol order details
+            document.addEventListener("click", function(event) {
+                if (event.target.closest(".order-details-button")) {
+                    const button = event.target.closest(".order-details-button");
+                    const orderDetails = JSON.parse(button.getAttribute("data-order"));
+                    const totalPrice = button.getAttribute("data-total-price");
+                    const orderDetailsList = document.getElementById("order-details-list");
+                    const totalPriceElement = document.getElementById("total-price").querySelector("span");
 
-            function formatDateTime(dateTime) {
-                const options = {
-                    year: 'numeric',
-                    month: 'short',
-                    day: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit',
-                    hour12: false,
-                };
-                return new Date(dateTime).toLocaleDateString('id-ID', options);
-            }
+                    // Kosongkan list sebelum mengisi ulang
+                    orderDetailsList.innerHTML = "";
 
-            function calculatePoints(totalPrice) {
-                return Math.floor(totalPrice / 10000);
-            }
-
-            function showOrderDetails(orderDetails, totalPrice) {
-                var detailsList = document.getElementById('order-details-list');
-
-                // Clear previous details
-                detailsList.innerHTML = '';
-
-                // Populate popup with order details
-                orderDetails.forEach(function(detail) {
-                    var listItem = document.createElement('li');
-                    listItem.textContent = detail.menu_name + ' (' + 'x' + detail.quantity + ')' + ' - ' +
-                        formatCurrency(detail.menu_price);
-                    detailsList.appendChild(listItem);
-                });
-
-                // Calculate and display total points earned
-                var totalPoints = calculatePoints(totalPrice);
-                document.getElementById('total-points').querySelector('span').textContent = totalPoints;
-
-                // Show the popup with animation
-                document.getElementById('orderDetailsPopup').classList.add('show');
-            }
-
-            document.querySelectorAll('.order-details-button').forEach(button => {
-                button.addEventListener('click', function() {
-                    var orderDetails = JSON.parse(this.getAttribute('data-order'));
-                    var totalPrice = this.getAttribute('data-total-price');
-                    showOrderDetails(orderDetails, totalPrice);
-                });
-            });
-
-            document.getElementById('closePopup').addEventListener('click', function() {
-                document.getElementById('orderDetailsPopup').classList.remove('show');
-            });
-
-            document.getElementById('search').addEventListener('input', function() {
-                var query = this.value;
-                var branch_id = document.getElementById('branchFilter').value;
-
-                fetch('{{ route('dashboard.orders.search') }}?query=' + query + '&branch_id=' + branch_id)
-                    .then(response => response.json())
-                    .then(orders => {
-                        var tbody = document.querySelector('table tbody');
-                        tbody.innerHTML = '';
-
-                        orders.forEach(order => {
-                            var row = document.createElement('tr');
-                            row.innerHTML = `
-                                <td>${order.id}</td>
-                                <td>${order.user.fullname}</td>
-                                <td>${order.branch.name}</td>
-                                <td>${formatCurrency(order.total_price)}</td>
-                                <td>${order.status}</td>
-                                <td>${formatDateTime(order.created_at)}</td>
-                                <td>
-                                    <button class="btn btn-info order-details-button" data-order='${JSON.stringify(order.order_details)}' data-total-price="${order.total_price}">View</button>
-                                </td>
-                            `;
-                            tbody.appendChild(row);
-
-                            row.querySelector('.order-details-button').addEventListener('click',
-                                function() {
-                                    var orderDetails = JSON.parse(this.getAttribute(
-                                        'data-order'));
-                                    var totalPrice = this.getAttribute('data-total-price');
-                                    showOrderDetails(orderDetails, totalPrice);
-                                });
+                    if (orderDetails.length === 0) {
+                        orderDetailsList.innerHTML =
+                            `<li class="list-group-item text-center">Tidak ada data pesanan</li>`;
+                    } else {
+                        orderDetails.forEach((item, index) => {
+                            orderDetailsList.innerHTML += `
+                        <li class="list-group-item">
+                            <strong>${index + 1}. ${item.menu_name}</strong> <br>
+                            Jumlah: ${item.quantity} <br>
+                            Harga: Rp ${parseInt(item.menu_price).toLocaleString('id-ID')} <br>
+                            Catatan: ${item.note ? item.note : '-'}
+                        </li>
+                    `;
                         });
-                    });
+                    }
+
+                    // Tampilkan total harga
+                    totalPriceElement.innerText = `Rp ${parseInt(totalPrice).toLocaleString('id-ID')}`;
+
+                    // Tampilkan modal
+                    $("#myModal").modal("show");
+                }
             });
 
-            document.getElementById('branchFilter').addEventListener('change', function() {
-                var branch_id = this.value;
-                var query = document.getElementById('search').value;
+            document.getElementById('search').addEventListener('keyup', function() {
+                let query = this.value;
+                let branchOutletId = new URLSearchParams(window.location.search).get('branch_id') || '';
 
-                fetch('{{ route('dashboard.orders.search') }}?query=' + query + '&branch_id=' + branch_id)
+                fetch(
+                        `{{ route('dashboard.orders.search') }}?query=${encodeURIComponent(query)}&branch_id=${encodeURIComponent(branchOutletId)}`
+                    )
                     .then(response => response.json())
-                    .then(orders => {
-                        var tbody = document.querySelector('table tbody');
-                        tbody.innerHTML = '';
+                    .then(data => {
+                        let tableBody = document.querySelector('table tbody');
+                        tableBody.innerHTML = '';
 
-                        orders.forEach(order => {
-                            var row = document.createElement('tr');
-                            row.innerHTML = `
-                                <td>${order.id}</td>
-                                <td>${order.user.fullname}</td>
-                                <td>${order.branch.name}</td>
-                                <td>${formatCurrency(order.total_price)}</td>
-                                <td>${order.status}</td>
-                                <td>${formatDateTime(order.created_at)}</td>
-                                <td>
-                                    <button class="btn btn-info order-details-button" data-order='${JSON.stringify(order.order_details)}' data-total-price="${order.total_price}">View</button>
-                                </td>
-                            `;
-                            tbody.appendChild(row);
+                        if (data.length === 0) {
+                            tableBody.innerHTML =
+                                '<tr><td colspan="7" class="text-center">Tidak ditemukan adanya pesanan</td></tr>';
+                        } else {
+                            data.forEach((order, index) => {
+                                let statusClass = order.status === 'success' ? 'text-success' :
+                                    order.status === 'pending' ? 'text-warning' : 'text-danger';
 
-                            row.querySelector('.order-details-button').addEventListener('click',
-                                function() {
-                                    var orderDetails = JSON.parse(this.getAttribute(
-                                        'data-order'));
-                                    var totalPrice = this.getAttribute('data-total-price');
-                                    showOrderDetails(orderDetails, totalPrice);
-                                });
-                        });
-                    });
+                                let formattedPrice = new Intl.NumberFormat('id-ID', {
+                                    style: 'decimal',
+                                    maximumFractionDigits: 0
+                                }).format(order.total_price);
+
+                                let formattedDate = new Date(order.created_at).toLocaleString(
+                                    'id-ID', {
+                                        day: '2-digit',
+                                        month: 'short',
+                                        year: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                    });
+
+                                tableBody.innerHTML += `
+                        <tr>
+                            <th scope="row" class="align-middle" style="font-size: small">${index + 1}</th>
+                            <td class="align-middle" style="font-size: small">${order.user ? order.user.fullname : '-'}</td>
+                            <td class="align-middle" style="font-size: small">${order.branch ? order.branch.name : '-'}</td>
+                            <td class="align-middle" style="font-size: small">${formattedPrice}</td>
+                            <td class="align-middle" style="font-size: small"><span class="fw-bold ${statusClass}">${order.status}</span></td>
+                            <td class="align-middle" style="font-size: small">${formattedDate}</td>
+                            <td class="align-middle" style="font-size: small">
+                                <button class="btn btn-info font-12 text-white order-details-button"
+                                    data-order='${JSON.stringify(order.orderDetails)}'
+                                    data-total-price='${order.total_price}'>
+                                    <i class="fas fa-info-circle"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                            });
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
             });
         });
     </script>

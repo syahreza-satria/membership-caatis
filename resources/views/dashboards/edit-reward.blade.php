@@ -1,86 +1,120 @@
 @extends('dashboards.layouts.main')
 
-@section('container')
-    <div class="container mt-3">
-        <h2 class="text-red fw-bold">Rewards</h2>
-        <hr>
-        <div class="container mt-3 shadow p-4 bg-white rounded">
-            <h3 class="text-red fw-bold mb-2 font-24">Edit Rewards</h3>
-            <form action="{{ route('dashboard.rewards.update', $reward->id) }}" method="POST" enctype="multipart/form-data">
-                @csrf
-                @method('PUT')
-                <div class="form-group mb-2">
-                    <label for="title" class=" mb-1">Judul</label>
-                    <input type="text" class="form-control" id="title" name="title" value="{{ $reward->title }}"
-                        required>
-                </div>
-                <div class="form-group mb-2">
-                    <label for="product_points" class=" mb-1">Poin</label>
-                    <input type="number" class="form-control" id="product_points" name="product_points"
-                        value="{{ $reward->product_points }}" required>
-                </div>
-                <div class="form-group mb-2">
-                    <label for="description" class=" mb-1">Deskripsi</label>
-                    <textarea class="form-control" id="description" name="description" required>{{ $reward->description }}</textarea>
-                </div>
-                <div class="form-group mb-2">
-                    <label for="image" class="mb-1">Gambar</label>
-                    <input type="file" class="form-control mb-3" id="image" name="image" accept="image/*">
-                    <div class="d-flex">
-                        @if ($reward->image_path)
-                            <img src="{{ asset('storage/' . $reward->image_path) }}" alt="{{ $reward->title }}"
-                                width="100" class="mt-2 rounded" id="currentImage">
-                        @endif
-                        <img id="previewImage" class="mt-2 rounded ms-3"
-                            style="display: none; max-width: 100px; max-height: 100px;">
+@section('content')
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Rewards</h1>
+    </div>
 
-                        <!-- Tombol Hapus Preview -->
-                        <button type="button" id="clearPreviewBtn"
-                            class="btn btn-danger background-red text-white font-bold ms-2 my-5"
-                            style="display: none;">Hapus
-                            gambar</button>
+    <!-- Content Row -->
+    <div class="row">
+        <!-- Edit Rewards -->
+        <div class="col-xl-12 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-lg font-weight-bold text-success text-uppercase mb-1">
+                                Tambah Rewards
+                            </div>
+                            <hr />
+                            <form action="{{ route('dashboard.rewards.update', $reward->id) }}" method="POST"
+                                enctype="multipart/form-data">
+                                @csrf
+                                @method('PUT')
+                                <div class="row">
+                                    <!-- Judul -->
+                                    <div class="col">
+                                        <div class="form-group">
+                                            <label for="title">Nama Rewards</label>
+                                            <input type="text" class="form-control" id="title" required
+                                                name="title" value="{{ $reward->title }}" />
+                                        </div>
+                                    </div>
+                                    <!-- Poin -->
+                                    <div class="col">
+                                        <div class="form-group">
+                                            <label for="product_points">Poin</label>
+                                            <input type="number" class="form-control" id="product_points"
+                                                name="product_points" min="0" required
+                                                value="{{ $reward->product_points }}" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Deskripsi -->
+                                <div class="form-group">
+                                    <label for="description">Deskripsi</label>
+                                    <textarea class="form-control" id="description" required rows="3" name="description">{{ $reward->description }}</textarea>
+                                </div>
+
+                                <!-- Logo -->
+                                <div class="d-flex align-items-center">
+                                    @if ($reward->image_path)
+                                        <img id="previewImage" src="{{ asset('storage/' . $reward->image_path) }}"
+                                            alt="{{ $reward->title }}" width="100" height="100" class="rounded"
+                                            style="object-fit: cover; margin-top: 8px; margin-right: 16px">
+                                    @else
+                                        <img id="previewImage" src="#" alt="Preview Gambar" width="100"
+                                            height="100" class="rounded d-none"
+                                            style="object-fit: cover; margin-top: 8px; margin-right: 16px">
+                                    @endif
+
+                                    <div class="form-group my-auto w-100">
+                                        <label for="image">Gambar</label>
+                                        <div class="custom-file mb-3">
+                                            <input type="file" class="custom-file-input" id="validatedCustomFile"
+                                                name="image">
+                                            <label class="custom-file-label" for="validatedCustomFile">Pilih Gambar</label>
+                                            <div class="invalid-feedback">Example invalid custom file feedback</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Tombol Hapus Preview -->
+                                <button type="button" id="clearPreviewBtn" class="btn btn-danger btn-sm mt-2 d-none">
+                                    Hapus Gambar
+                                </button>
+                                <div class="d-flex justify-content-end">
+                                    <a href="{{ route('dashboard.rewards') }}" class="btn btn-secondary mr-2">Cancel</a>
+                                    <button type="submit" class="btn btn-primary">
+                                        Update Reward
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
-                <div class="d-flex justify-content-end">
-                    <button type="submit" class="btn btn-danger background-red text-white fw-bold mt-3">Update
-                        Reward</button>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 @endsection
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const imageInput = document.getElementById('image');
+        const imageInput = document.getElementById('validatedCustomFile'); // Perbaikan ID
         const previewImage = document.getElementById('previewImage');
         const clearPreviewBtn = document.getElementById('clearPreviewBtn');
 
-        // Fungsi untuk menampilkan preview gambar dan tombol hapus
+        // Fungsi untuk menampilkan preview gambar
         imageInput.addEventListener('change', function(event) {
             const file = event.target.files[0];
+
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     previewImage.src = e.target.result;
-                    previewImage.style.display = 'block'; // Menampilkan gambar preview
-                    clearPreviewBtn.style.display = 'inline-block'; // Menampilkan tombol hapus
+                    previewImage.classList.remove('d-none'); // Menampilkan gambar preview
+                    clearPreviewBtn.classList.remove('d-none'); // Menampilkan tombol hapus
                 };
                 reader.readAsDataURL(file);
-            } else {
-                previewImage.style.display =
-                    'none'; // Menyembunyikan gambar preview jika tidak ada file
-                clearPreviewBtn.style.display =
-                    'none'; // Menyembunyikan tombol hapus jika tidak ada file
             }
         });
 
-        // Fungsi untuk menghapus gambar dan menyembunyikan tombol hapus
+        // Fungsi untuk menghapus preview gambar
         clearPreviewBtn.addEventListener('click', function() {
-            // Mengosongkan input file
-            imageInput.value = '';
-            previewImage.style.display = 'none'; // Menyembunyikan gambar preview
-            clearPreviewBtn.style.display = 'none'; // Menyembunyikan tombol hapus
+            imageInput.value = ''; // Reset input file
+            previewImage.src = '#'; // Menghapus preview
+            previewImage.classList.add('d-none'); // Sembunyikan gambar preview
+            clearPreviewBtn.classList.add('d-none'); // Sembunyikan tombol hapus
         });
     });
 </script>
