@@ -24,9 +24,14 @@
             </div>
             <div class="mb-2">
                 <label for="password" class=" form-label font-14 fw-bold mb-1">Password</label>
-                <input type="password" name="password" id="password" class="form-control"
-                    name="password" value="{{ old('password') }}">
-
+                <div class="input-group mb-2">
+                    <input type="password" name="password" id="password" class="form-control"
+                        name="password" value="{{ old('password') }}">
+                        <span class="input-group-text" onclick="togglePasswordVisibility('password')">
+                            <i id="password-icon" class="fa-solid fa-eye"></i>
+                        </span>
+                </div>
+                
                 @error('password')
                     <p class="text-danger font-14 mt-1">{{ $message }}</p>
                 @enderror

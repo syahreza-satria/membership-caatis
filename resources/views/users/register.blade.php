@@ -38,16 +38,26 @@
             </div>
             <div class="mb-2">
                 <label for="password" class="form-label font-14 fw-bold  mb-1">Password</label>
-                <input type="password" class="form-control " id="password" name="password">
-
+                <div class="input-group mb-2">
+                    <input type="password" class="form-control " id="password" name="password">
+                    <span class="input-group-text" onclick="togglePasswordVisibility('password')">
+                        <i id="password-icon" class="fa-solid fa-eye"></i>
+                    </span>
+                </div>               
+                
                 @error('password')
                     <p class="text-danger font-14 mt-1">{{ $message }}</p>
                 @enderror
             </div>
             <div class="mb-4">
                 <label for="password" class="form-label font-14 fw-bold  mb-1">Konfirmasi Password</label>
-                <input type="password" class="form-control " id="password" name="password_confirmation">
-
+                <div class="input-group mb-2">
+                    <input type="password" class="form-control " id="password_confirm" name="password_confirmation">
+                    <span class="input-group-text" onclick="togglePasswordVisibility('password_confirm')">
+                        <i id="password_confirm-icon" class="fa-solid fa-eye"></i>
+                    </span>
+                </div>          
+                
                 @error('password_confirmation')
                     <p class="text-danger font-14 mt-1">{{ $message }}</p>
                 @enderror
