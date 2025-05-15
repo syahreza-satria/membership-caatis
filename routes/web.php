@@ -7,6 +7,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\RewardController;
 use App\Http\Controllers\HistoryController;
 use App\Http\Controllers\DashboardController;
+use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
 
 Route::get('/', [OrderController::class, 'showBranch'])->name('showBranch');
 Route::get('/order/menu/{outletId}', [OrderController::class, 'pembelian'])->name('order.menu');
@@ -58,6 +59,9 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post('/dashboard/rewards/{reward}/toggle', [DashboardController::class, 'toggleRewardStatus'])->name('dashboard.rewards.toggle');
     Route::delete('/dashboard/rewards/{reward}', [DashboardController::class, 'destroyReward'])->name('dashboard.rewards.destroy');
     Route::get('/dashboard/users', [DashboardController::class, 'users'])->name('dashboard.users');
+    Route::patch('/users/{user}/toggle-admin', [DashboardController::class, 'toggleAdmin'])->name('dashboard.users.toggle-admin');
+    Route::delete('/dashboard/users/{user}', [DashboardController::class, 'destroyUser'])
+    ->name('dashboard.users.destroy');
     Route::get('/dashboard/orders', [DashboardController::class, 'orders'])->name('dashboard.orders');
     Route::get('/dashboard/orders/search', [DashboardController::class, 'searchOrders'])->name('dashboard.orders.search');
 

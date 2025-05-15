@@ -35,7 +35,7 @@
                                         @foreach ($users as $user)
                                             <tr>
                                                 <td scope="row" class="align-middle" style="font-size: small">
-                                                    1
+                                                    {{ $loop->iteration }}
                                                 </td>
                                                 <td class="align-middle" style="font-size: small">
                                                     {{ $user->fullname }}
@@ -51,12 +51,33 @@
                                                     @endif
                                                 </td>
                                                 <td class="align-middle text-center" style="font-size: small">
-                                                    <button class="btn btn-warning">
-                                                        <i class="fas fa-eye"></i>
-                                                    </button>
-                                                    <button class="btn btn-danger">
-                                                        <i class="fas fa-trash-alt"></i>
-                                                    </button>
+                                                    <!-- Toggle Admin Button -->
+                                                    <form action="{{ route('dashboard.users.toggle-admin', $user->id) }}"
+                                                        method="POST" style="display: inline;">
+                                                        @csrf
+                                                        @method('PATCH')
+                                                        <button type="submit"
+                                                            class="btn btn-sm {{ $user->is_admin ? 'btn-success' : 'btn-secondary' }}"
+                                                            title="{{ $user->is_admin ? 'Singkirkan Admin' : 'Jadikan Admin' }}">
+                                                            @if ($user->is_admin)
+                                                                <i class="fas fa-user-tie"></i>
+                                                            @else
+                                                                <i class="fas fa-user"></i>
+                                                            @endif
+                                                        </button>
+                                                    </form>
+
+                                                    <!-- Delete Button -->
+                                                    <form action="{{ route('dashboard.users.destroy', $user->id) }}"
+                                                        method="POST" style="display: inline;">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="btn btn-sm btn-danger"
+                                                            title="Delete User"
+                                                            onclick="return confirm('Kamu yakin ingin menghapus pengguna ini?')">
+                                                            <i class="fas fa-trash-alt"></i>
+                                                        </button>
+                                                    </form>
                                                 </td>
                                             </tr>
                                         @endforeach

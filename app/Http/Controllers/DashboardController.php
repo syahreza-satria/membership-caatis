@@ -172,6 +172,30 @@ class DashboardController extends Controller
         return view('dashboards.users', compact('users', 'totalUsers'));
     }
 
+    public function toggleAdmin(User $user)
+    {
+        // Prevent modifying own admin status
+        if ($user->id === auth()->id()) {
+            return back()->with('error', 'Kamu nggak boleh mengubah status adminmu sendiri!');
+        }
+
+        $user->update(['is_admin' => !$user->is_admin]);
+
+        $action = $user->is_admin ? 'dijadikan admin' : 'disingkirkan dari admin';
+        return back()->with('success', "User {$user->name} telah berhasil $action");
+    }
+
+    public function destroyUser(User $user)
+    {
+        // Prevent deleting yourself
+        if ($user->id === auth()->id()) {
+            return back()->with('error', 'EITSSSSS, Kamu tidak bisa menghapus diri sendiri yah!');
+        }
+
+        $user->delete();
+        return back()->with('success', 'User berhasil dihapus');
+    }
+
     public function orders(Request $request)
     {
         $validator = Validator::make($request->all(), [
