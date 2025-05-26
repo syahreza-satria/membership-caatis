@@ -9,7 +9,7 @@
                 href="{{ route('order.menu', $branch->outletId) }}">
                 <img src="{{ Storage::url($branch->logo) }}" class="rounded-3" style="border: 1px solid #14B8A6"
                     alt="{{ $branch->name }}" width="70">
-                <h3 class="font-16 fw-bold my-auto ms-3">{{ $branch->name }}</h3>
+                <h3 class="font-16 fw-semibold my-auto ms-3 text-uppercase">{{ $branch->name }}</h3>
             </a>
         @endforeach
     </main>

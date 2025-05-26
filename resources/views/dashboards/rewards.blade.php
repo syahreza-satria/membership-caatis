@@ -1,93 +1,5 @@
 @extends('dashboards.layouts.main')
 
-@section('container')
-    <div class="container mt-3">
-        <h2>Kelola Rewards</h2>
-        <hr>
-        <div class="container mt-4 shadow p-4 bg-white rounded">
-            <h1 class="mb-4">Tambahkan Rewards</h1>
-            <form action="{{ route('dashboard.rewards.store') }}" method="POST" enctype="multipart/form-data">
-                @csrf
-                <div class="form-group">
-                    <label for="title">Reward Title</label>
-                    <input type="text" class="form-control" id="title" name="title" required>
-                </div>
-                <div class="form-group">
-                    <label for="product_points">Reward Points</label>
-                    <input type="number" class="form-control" id="product_points" name="product_points" required>
-                </div>
-                <div class="form-group">
-                    <label for="description">Description</label>
-                    <textarea class="form-control" id="description" name="description" required></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="image">Image</label>
-                    <input type="file" class="form-control" id="image" name="image">
-                </div>
-                <div class="form-group">
-                    <label for="branch_id">Branch</label>
-                    <select class="form-control" id="branch_id" name="branch_id" required>
-                        <option value="">Pilih Cabang</option>
-                        @foreach ($branches as $branch)
-                            <option value="{{ $branch->id }}">{{ $branch->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <button type="submit" class="btn btn-primary mt-3">Add Reward</button>
-            </form>
-            @if ($rewards->isNotEmpty())
-                <h2 class="mt-4">Existing Rewards</h2>
-                <ul class="list-group">
-                    @foreach ($rewards as $reward)
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
-                                <h5>{{ $reward->title }}</h5>
-                                <p class="fw-semibold">Cabang: {{ $reward->branch->name }}</p>
-                                <p>{{ $reward->description }}</p>
-                                <p class="fw-semibold">{{ $reward->product_points }} points</p>
-                                @if ($reward->image_path)
-                                    <img src="{{ asset('storage/' . $reward->image_path) }}" alt="{{ $reward->title }}"
-                                        width="100" class="{{ $reward->is_active ? '' : 'grayscale' }} rounded-4">
-                                @else
-                                    <p class="fw-semibold mt-3">Tidak Memiliki Foto</p>
-                                @endif
-                            </div>
-                            <div class="d-flex">
-                                <button type="button"
-                                    class="btn me-2 toggle-status-btn {{ $reward->is_active ? 'btn-success' : 'btn-secondary' }}"
-                                    data-url="{{ route('dashboard.rewards.toggle', $reward->id) }}">
-                                    {!! $reward->is_active ? '<i class="bi bi-eye-fill"></i>' : '<i class="bi bi-eye-slash-fill"></i>' !!}
-                                </button>
-
-                                <a href="{{ route('dashboard.rewards.edit', $reward->id) }}" class="btn btn-info me-2"><i
-                                        class="bi bi-pencil-fill text-white"></i>
-                                </a>
-                                <button type="button" class="btn btn-danger delete-btn"
-                                    data-url="{{ route('dashboard.rewards.destroy', $reward->id) }}">
-                                    <i class="bi bi-trash3-fill"></i>
-                                </button>
-                            </div>
-                        </li>
-                    @endforeach
-                </ul>
-            @else
-                <p class="mt-4">Belum ada reward yang ditambahkan.</p>
-            @endif
-        </div>
-    </div>
-
-    <!-- Hidden form for toggling status -->
-    <form id="toggle-status-form" method="POST" style="display: none;">
-        @csrf
-    </form>
-
-    <!-- Hidden form for deleting reward -->
-    <form id="delete-form" method="POST" style="display: none;">
-        @csrf
-        @method('DELETE')
-    </form>
-@endsection
-
 @section('styles')
     <style>
         .grayscale {
@@ -96,14 +8,214 @@
     </style>
 @endsection
 
+@section('content')
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Rewards</h1>
+    </div>
+
+    <!-- Content Row -->
+    <div class="row">
+        <!-- Add Rewards -->
+        <div class="col-xl-12 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-lg font-weight-bold text-success text-uppercase mb-1">
+                                Tambah Rewards
+                            </div>
+                            <hr />
+                            <form action="{{ route('dashboard.rewards.store') }}" method="POST"
+                                enctype="multipart/form-data">
+                                @csrf
+                                <div class="row">
+                                    <!-- Judul -->
+                                    <div class="col">
+                                        <div class="form-group">
+                                            <label for="title">Nama Rewards</label>
+                                            <input type="text" class="form-control" id="title" required
+                                                name="title" />
+                                        </div>
+                                    </div>
+                                    <!-- Poin -->
+                                    <div class="col">
+                                        <div class="form-group">
+                                            <label for="product_points">Poin</label>
+                                            <input type="number" class="form-control" id="product_points"
+                                                name="product_points" min="0" required />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col">
+                                        <!-- Cabang -->
+                                        <div class="form-group">
+                                            <label for="branch_id">Cabang</label>
+                                            <select class="form-control" id="branch_id" name="branch_id" required>
+                                                <option>Pilih Cabang</option>
+                                                @foreach ($branches as $branch)
+                                                    <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col">
+                                        <!-- Logo -->
+                                        <div class="form-group">
+                                            <label for="image">Gambar</label>
+                                            <!-- Preview Image -->
+                                            <div class="d-flex align-items-center">
+                                                <div class="pr-1">
+                                                    <img id="imagePreview" src="#" alt="Preview Gambar"
+                                                        class="img-thumbnail d-none" width="150">
+                                                </div>
+                                                <div class="custom-file mb-3">
+                                                    <input type="file" class="custom-file-input" id="validatedCustomFile"
+                                                        name="image" accept="image/*" onchange="previewImage(event)" />
+                                                    <label class="custom-file-label" for="validatedCustomFile">Pilih
+                                                        Gambar</label>
+                                                    <div class="invalid-feedback">
+                                                        Example invalid custom file feedback
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Deskripsi -->
+                                <div class="form-group">
+                                    <label for="description">Deskripsi</label>
+                                    <textarea class="form-control" id="description" required rows="3" name="description"></textarea>
+                                </div>
+                                <div class="d-flex justify-content-end">
+                                    <button type="submit" class="btn btn-primary">
+                                        Tambahkan
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Existing Reward -->
+        <div class="col-xl-12 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-lg font-weight-bold text-success text-uppercase mb-1">
+                                Daftar Rewards
+                            </div>
+                            <hr />
+                            @if ($rewards->isNotEmpty())
+                                @foreach ($rewards as $reward)
+                                    <div class="card mb-2">
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col">
+                                                    <h5 class="card-title font-weight-bold" style="color: #000000">
+                                                        {{ $reward->title }}
+                                                    </h5>
+                                                    <h6 class="card-subtitle mb-2 text-muted">
+                                                        Cabang:
+                                                        <span
+                                                            class="text-dark font-weight-bolder text-primary">{{ $reward->branch->name }}</span>
+                                                    </h6>
+                                                    <p class="card-text font-weight-light">
+                                                        {{ $reward->description }}
+                                                    </p>
+                                                    <p class="">{{ $reward->product_points }} Points</p>
+                                                </div>
+                                                <div class="col d-flex justify-content-end">
+                                                    <div class="text-center">
+                                                        <img src="{{ $reward->image_path ? Storage::url($reward->image_path) : asset('img/default-image.png') }}"
+                                                            alt="{{ $reward->title }}" width="100" height="100"
+                                                            class="rounded {{ $reward->is_active ? '' : 'grayscale' }} shadow"
+                                                            style="object-fit: cover" />
+
+                                                        <div class="mt-1 d-flex justify-content-center align-items-center">
+                                                            <button type="button"
+                                                                data-url="{{ route('dashboard.rewards.toggle', $reward->id) }}"
+                                                                class="card-link btn {{ $reward->is_active ? 'text-success' : 'text-secondary' }} toggle-status-btn"
+                                                                title="Show" data-bs-toggle="tooltip"
+                                                                data-bs-placement="top">{!! $reward->is_active ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>' !!}
+
+                                                            </button>
+                                                            <a href="{{ route('dashboard.rewards.edit', $reward->id) }}"
+                                                                class="card-link text-warning" title="Edit"
+                                                                data-bs-toggle="tooltip" data-bs-placement="top">
+                                                                <i class="fas fa-pencil-ruler"></i>
+
+                                                            </a>
+                                                            <button type="button"
+                                                                data-url="{{ route('dashboard.rewards.destroy', $reward->id) }}"
+                                                                class="card-link text-danger btn delete-btn"
+                                                                title="Delete" data-bs-toggle="tooltip"
+                                                                data-bs-placement="top">
+                                                                <i class="fas fa-trash-alt"></i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            @else
+                                <h5 class="text-center my-5">Tidak ada rewards yang terdaftar</h5>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form id="toggle-status-form" method="POST" style="display: none;">
+        @csrf
+    </form>
+
+    <form id="delete-form" method="POST" style="display: none;">
+        @csrf
+        @method('DELETE')
+    </form>
+@endsection
+
 @section('scripts')
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    {{-- Preview Gambar --}}
+    <script>
+        function previewImage(event) {
+            const fileInput = event.target;
+            const file = fileInput.files[0]; // Ambil file yang dipilih
+            const fileName = file ? file.name : "Pilih Gambar"; // Ambil nama file
+            const reader = new FileReader();
+
+            if (file) {
+                reader.onload = function(e) {
+                    // Set preview gambar
+                    const imgPreview = document.getElementById('imagePreview');
+                    imgPreview.src = e.target.result;
+                    imgPreview.classList.remove('d-none');
+                };
+
+                reader.readAsDataURL(file);
+            }
+
+            // Ganti teks label dengan nama file
+            fileInput.nextElementSibling.innerText = fileName;
+        }
+    </script>
+
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.toggle-status-btn').forEach(button => {
                 button.addEventListener('click', function() {
                     var url = this.dataset.url;
-                    var isActive = this.classList.contains('btn-success');
+                    var isActive = this.classList.contains('text-success');
 
                     var title = isActive ? 'Kamu yakin menyembunyikan katalog ini?' :
                         'Kamu yakin menampilkan katalog ini?';

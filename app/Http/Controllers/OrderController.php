@@ -21,6 +21,7 @@ class OrderController extends Controller
     public function showBranch()
     {
         $branches = Branch::all();
+        session()->forget('basket');
 
         return view('orders.branches', [
             'banner' => 'PEMBELIAN',
@@ -54,7 +55,7 @@ class OrderController extends Controller
 
                 $groupedData = $this->groupByCategory($menuItems);
             }
-            
+
         } catch (\Exception $e) {
             Log::error('Error fetching menu data', ['exception' => $e]);
         }
@@ -376,7 +377,7 @@ class OrderController extends Controller
         $order = Order::create([
             'user_id' => auth()->id(),
             'branch_id' => $branch->outletId,
-            'status' => 'pending',
+            'status' => 'success',
             'total_price' => $totalPrice,
         ]);
 
@@ -411,9 +412,12 @@ class OrderController extends Controller
             'identity' => '-',
             'outlet_id' => $branch->outletId,
             'order_payment' => 3,
+            'order_type' => $branch->order_type,
             'order_totals' => $totalPrice,
             'order_details' => $formattedOrderDetails,
         ];
+
+        Log::info($orderData);
 
         // Kirim data ke API teman
         $this->sendOrderToFriendApi($orderData, $branch->api_url, $branch->api_token);
@@ -452,8 +456,8 @@ class OrderController extends Controller
         return view('orders.receipt', compact('order', 'orderDetails', 'pointsEarned'));
     }
 
-    
-    // private function 
+
+    // private function
     private function fetchVariant($outletId, $menuId)
     {
         $response = Http::withHeaders([
@@ -487,7 +491,7 @@ class OrderController extends Controller
             return null; // Kembalikan null jika API gagal diakses
         }
     }
-    
+
     // Mengirim pesanan ke API teman
     private function sendOrderToFriendApi($orderData, $apiUrl, $apiToken)
     {
@@ -503,7 +507,7 @@ class OrderController extends Controller
         try {
             // Lengkapi URL dengan endpoint yang sesuai
             $fullApiUrl = rtrim($apiUrl, '/') . '/mobile/order';
-            
+
             // Log URL final yang digunakan
             Log::info('Full API URL', ['url' => $fullApiUrl]);
 
@@ -602,7 +606,7 @@ class OrderController extends Controller
     private function fetchCategories($branch_id)
     {
         $apiUrl = "https://pos.lakesidefnb.group/api/mobile/category/outlet/{$branch_id}";
-        $apiKey = 'p0s-fnb-@p1-t0k3n-2024-xnxx'; 
+        $apiKey = 'p0s-fnb-@p1-t0k3n-2024-xnxx';
 
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
@@ -611,7 +615,7 @@ class OrderController extends Controller
         ])->get($apiUrl);
 
         if ($response->successful()) {
-            return $response->json()['data'];  
+            return $response->json()['data'];
         } else {
             return [];
         }
@@ -621,7 +625,7 @@ class OrderController extends Controller
     public function getMenuItems($branch_id)
     {
         $apiUrl = "https://pos.lakesidefnb.group/api/mobile/product/outlet/{$branch_id}";
-        $apiKey = 'p0s-fnb-@p1-t0k3n-2024-xnxx'; 
+        $apiKey = 'p0s-fnb-@p1-t0k3n-2024-xnxx';
 
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
@@ -630,7 +634,7 @@ class OrderController extends Controller
         ])->get($apiUrl);
 
         if ($response->successful()) {
-            return $response->json()['data'];  
+            return $response->json()['data'];
         } else {
             return [];
         }

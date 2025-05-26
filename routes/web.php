@@ -7,6 +7,11 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\RewardController;
 use App\Http\Controllers\HistoryController;
 use App\Http\Controllers\DashboardController;
+use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
+
+Route::get('/', [OrderController::class, 'showBranch'])->name('showBranch');
+Route::get('/order/menu/{outletId}', [OrderController::class, 'pembelian'])->name('order.menu');
+Route::post('/order/add-to-cart', [OrderController::class, 'addToCart'])->name('order.addToCart');
 
 // USER LOGIN AND AUTHENTICATION
 Route::get('/register', [UserController::class, 'create'])->name('register')->middleware('guest');
@@ -18,10 +23,9 @@ Route::post('/users/sso', [UserController::class, 'authenticateSso'])->name('log
 Route::post('/logout', [UserController::class, 'logout'])->name('logout')->middleware('auth');
 
 
-
 Route::middleware('auth')->group(function () {
     // REWARDS STUFF
-    Route::get('/', [RewardController::class, 'index'])->name('reward');
+    Route::get('/reward', [RewardController::class, 'index'])->name('reward');
     Route::get('/rewards/{reward}', [RewardController::class, 'show'])->name('reward.show');
     Route::post('/rewards/redeem/{reward}', [RewardController::class, 'redeemPoints'])->name('reward.redeemPoints');
 
@@ -32,8 +36,6 @@ Route::middleware('auth')->group(function () {
 
     // ORDER
     Route::get('/branch', [OrderController::class, 'showBranch'])->name('showBranch');
-    Route::get('/order/menu/{outletId}', [OrderController::class, 'pembelian'])->name('order.menu');
-    Route::post('/order/add-to-cart', [OrderController::class, 'addToCart'])->name('order.addToCart');
     Route::get('/cart/{outletId}', [OrderController::class, 'showCart'])->name('showCart');
     Route::post('/update-cart', [OrderController::class, 'updateCart'])->name('updateCart');
     Route::post('/cart/remove-item', [OrderController::class, 'removeItem'])->name('removeItem');
@@ -44,14 +46,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/order/save-basket', [OrderController::class, 'saveBasket'])->name('order.saveBasket');
     Route::post('/log-remove-item', [OrderController::class, 'logRemoveItem'])->name('logRemoveItem');
 });
-
- 
-
-// Route::get('/order/show-code', [OrderController::class, 'showCode'])->middleware('auth');
-// Route::post('/order/create', [OrderController::class, 'createOrder'])->name('order.create')->middleware('auth');
-// Route::get('/order/verification', [OrderController::class, 'inputKode'])->name('order.inputKode')->middleware('auth');
-// Route::post('/order/verify-code', [OrderController::class, 'verifyCode'])->name('order.verifyCode')->middleware('auth');
-// Route::get('/order/success', [OrderController::class, 'showSuccessPage'])->name('order.success')->middleware('auth');
 
 // DASHBOARD
 Route::middleware(['auth', 'admin'])->group(function () {
@@ -65,6 +59,9 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post('/dashboard/rewards/{reward}/toggle', [DashboardController::class, 'toggleRewardStatus'])->name('dashboard.rewards.toggle');
     Route::delete('/dashboard/rewards/{reward}', [DashboardController::class, 'destroyReward'])->name('dashboard.rewards.destroy');
     Route::get('/dashboard/users', [DashboardController::class, 'users'])->name('dashboard.users');
+    Route::patch('/users/{user}/toggle-admin', [DashboardController::class, 'toggleAdmin'])->name('dashboard.users.toggle-admin');
+    Route::delete('/dashboard/users/{user}', [DashboardController::class, 'destroyUser'])
+    ->name('dashboard.users.destroy');
     Route::get('/dashboard/orders', [DashboardController::class, 'orders'])->name('dashboard.orders');
     Route::get('/dashboard/orders/search', [DashboardController::class, 'searchOrders'])->name('dashboard.orders.search');
 
@@ -76,10 +73,3 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::put('/dashboard/branches/{branch}', [DashboardController::class, 'updateBranch'])->name('dashboard.branches.update');
     Route::delete('/dashboard/branches/{branch}', [DashboardController::class, 'destroyBranch'])->name('dashboard.branches.destroy');
 });
-
-
-// Route::get('/about', function(){
-//     return view('about',[
-//         'banner' => 'TENTANG KAMI'
-//     ]);
-// })->middleware('auth');

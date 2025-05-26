@@ -17,7 +17,18 @@ class DashboardController extends Controller
     public function index()
     {
         $totalUsers = User::count();
-        return view('dashboards.index', compact('totalUsers'));
+        $today = Carbon::today();
+        $code = VerificationCode::where('date', $today)->first();
+        $branches = Branch::all();
+        $orders = Order::all();
+        $users = User::all();
+        $rewards = Reward::all();
+
+        if (!$code) {
+            $code = $this->generateCode();
+        }
+
+        return view('dashboards.index', compact('totalUsers', 'code', 'branches', 'orders', 'users', 'rewards'));
     }
 
     public function verificationCodes()
@@ -39,10 +50,13 @@ class DashboardController extends Controller
     {
         $today = Carbon::today();
 
-        $verificationCode = VerificationCode::firstOrCreate(
-            ['date' => $today],
-            ['code' => str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT)]
-        );
+        $verificationCode = VerificationCode::firstOrNew(['date' => $today]);
+
+        if (!$verificationCode->exists) {
+            $verificationCode->code = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
+            $verificationCode->date = $today;
+            $verificationCode->save();
+        }
 
         return $verificationCode->code;
     }
@@ -140,11 +154,11 @@ class DashboardController extends Controller
     public function destroyReward($id)
     {
         $reward = Reward::findOrFail($id);
-        
+
         if ($reward->image_path) {
             Storage::disk('public')->delete($reward->image_path);
         }
-        
+
         $reward->delete();
 
         return redirect()->route('dashboard.rewards')->with('success', 'Reward deleted successfully.');
@@ -158,11 +172,35 @@ class DashboardController extends Controller
         return view('dashboards.users', compact('users', 'totalUsers'));
     }
 
+    public function toggleAdmin(User $user)
+    {
+        // Prevent modifying own admin status
+        if ($user->id === auth()->id()) {
+            return back()->with('error', 'Kamu nggak boleh mengubah status adminmu sendiri!');
+        }
+
+        $user->update(['is_admin' => !$user->is_admin]);
+
+        $action = $user->is_admin ? 'dijadikan admin' : 'disingkirkan dari admin';
+        return back()->with('success', "User {$user->name} telah berhasil $action");
+    }
+
+    public function destroyUser(User $user)
+    {
+        // Prevent deleting yourself
+        if ($user->id === auth()->id()) {
+            return back()->with('error', 'EITSSSSS, Kamu tidak bisa menghapus diri sendiri yah!');
+        }
+
+        $user->delete();
+        return back()->with('success', 'User berhasil dihapus');
+    }
+
     public function orders(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'search' => 'nullable|string|max:255',
-            'branch_id' => 'nullable|integer|exists:branches,id'
+            'branch_id' => 'nullable|string|exists:branches,outletId' // Gunakan outletId
         ]);
 
         if ($validator->fails()) {
@@ -173,19 +211,25 @@ class DashboardController extends Controller
 
         $search = $request->input('search');
         $branch_id = $request->input('branch_id');
-        
+
         $orders = Order::with('user', 'orderDetails', 'branch')
                         ->when($search, function ($query, $search) {
-                            return $query->whereHas('user', function ($query) use ($search) {
-                                $query->where('fullname', 'like', "%{$search}%");
+                            return $query->where(function ($query) use ($search) {
+                                $query->whereHas('user', function ($subQuery) use ($search) {
+                                    $subQuery->where('fullname', 'like', "%{$search}%");
+                                })->orWhereHas('branch', function ($subQuery) use ($search) {
+                                    $subQuery->where('name', 'like', "%{$search}%");
+                                })->orWhere('total_price', 'like', "%{$search}%");
                             });
                         })
                         ->when($branch_id, function ($query, $branch_id) {
-                            return $query->where('branch_id', $branch_id);
+                            return $query->whereHas('branch', function ($subQuery) use ($branch_id) {
+                                $subQuery->where('outletId', $branch_id);
+                            });
                         })
                         ->orderBy('created_at', 'desc')
                         ->get();
-        
+
         $branches = Branch::all();
 
         return view('dashboards.orders', compact('orders', 'search', 'branches', 'branch_id'));
@@ -197,11 +241,19 @@ class DashboardController extends Controller
         $branch_id = $request->input('branch_id');
 
         $orders = Order::with('user', 'orderDetails', 'branch')
-            ->whereHas('user', function ($q) use ($query) {
-                $q->where('fullname', 'like', '%' . $query . '%');
+            ->where(function ($q) use ($query) {
+                if ($query) {
+                    $q->whereHas('user', function ($subQuery) use ($query) {
+                        $subQuery->where('fullname', 'like', "%{$query}%");
+                    })->orWhereHas('branch', function ($subQuery) use ($query) {
+                        $subQuery->where('name', 'like', "%{$query}%");
+                    })->orWhere('total_price', 'like', "%{$query}%");
+                }
             })
             ->when($branch_id, function ($q) use ($branch_id) {
-                $q->where('branch_id', $branch_id);
+                return $q->whereHas('branch', function ($subQuery) use ($branch_id) {
+                    $subQuery->where('outletId', $branch_id);
+                });
             })
             ->orderBy('created_at', 'desc')
             ->get();
@@ -229,6 +281,7 @@ class DashboardController extends Controller
             'api_url' => 'nullable|string|max:255',
             'api_token' => 'nullable|string|max:255',
             'outletId' => 'nullable|string|max:255',
+            'order_type' => 'nullable|string|max:255'
         ]);
 
         if ($request->hasFile('logo')) {
@@ -254,6 +307,7 @@ class DashboardController extends Controller
             'api_url' => 'nullable|string|max:255',
             'api_token' => 'nullable|string|max:255',
             'outletId' => 'nullable|string|max:255',
+            'order_type' => 'nullable|string|max:255'
         ]);
 
         if ($request->hasFile('logo')) {

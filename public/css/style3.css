@@ -29,6 +29,10 @@
     background: linear-gradient(to bottom, #2dd4bf, #14b8a6);
 }
 
+.b-primary {
+    border: 2px solid var(--primary);
+}
+
 .grayscale {
     filter: grayscale(100%);
 }
@@ -246,9 +250,10 @@ form .button-sso {
     cursor: pointer;
 }
 
-#decreaseQty, #increaseQty {
-    width: 30px;        
-    height: 30px;      
+#decreaseQty,
+#increaseQty {
+    width: 30px;
+    height: 30px;
     font-size: 20px;
     line-height: 0;
 }
@@ -275,11 +280,11 @@ form .button-sso {
     margin: 0px;
 }
 
-.textarea-wrapper{
+.textarea-wrapper {
     position: relative;
 }
 
-.textarea-wrapper i{
+.textarea-wrapper i {
     position: absolute;
     top: 10px;
     left: 14px;
@@ -287,7 +292,7 @@ form .button-sso {
     font-size: larger;
 }
 
-textarea.notes{
+textarea.notes {
     background-color: rgb(244, 244, 244);
     border-radius: 30px;
     resize: none;
@@ -295,14 +300,3 @@ textarea.notes{
     padding: 10px 15px;
     padding-left: 48px;
 }
-
-input[type="number"]::-webkit-inner-spin-button,
-input[type="number"]::-webkit-outer-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-
-input[type="number"] {
-    -moz-appearance: textfield;
-
-
