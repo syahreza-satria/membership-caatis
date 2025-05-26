@@ -2,8 +2,9 @@
 
 namespace Database\Seeders;
 
-use App\Models\Reward;
 use App\Models\User;
+use App\Models\Reward;
+use Illuminate\Support\Str;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -17,6 +18,18 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
         // Reward::factory(10)->create();
+
+        User::create([
+            'fullname' => 'Administrator',
+            'email' => 'batanghitam@gmail.com',
+            'password' => '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
+            'phone' => '000000',
+            'user_points' => 99999,
+            'is_admin' => true,
+            'remember_token' => Str::random(10),
+        ]);
+
+
         $this->call(BranchSeeder::class);
 
     }
